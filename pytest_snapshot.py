@@ -18,6 +18,7 @@ def pytest_addoption(parser):
         help='Update snapshots.'
     )
 
+
 @pytest.fixture
 def snapshot(request):
     with Snapshot(request.config.option.snapshot_update) as snapshot:
@@ -25,7 +26,6 @@ def snapshot(request):
 
 
 class Snapshot(object):
-
     _created_snapshots = None  # type: List[str]
     _updated_snapshots = None  # type: List[str]
     _snapshot_update = None  # type: bool
@@ -58,14 +58,14 @@ class Snapshot(object):
         if self._snapshot_dir is None:
             raise AssertionError('snapshot.snapshot_dir was not set.')
         return self._snapshot_dir
-    
+
     @snapshot_dir.setter
     def snapshot_dir(self, value):
         self._snapshot_dir = Path(value)
 
     def _snapshot_path(self, snapshot_name):
         return self._snapshot_dir.joinpath(snapshot_name)
-        
+
     def assert_match(self, value, snapshot_name):
         """
         Asserts that ``value`` equals the current value of the snapshot with the given ``snapshot_name``.
@@ -95,4 +95,6 @@ class Snapshot(object):
                 else:
                     assert expected_value == value
             else:
-                raise AssertionError("Snapshot '{}' doesn't exist in '{}'.\nRun pytest with --snapshot-update to create it.".format(snapshot_name, self.snapshot_dir))
+                raise AssertionError(
+                    "Snapshot '{}' doesn't exist in '{}'.\nRun pytest with --snapshot-update to create it.".format(
+                        snapshot_name, self.snapshot_dir))
