@@ -4,6 +4,11 @@ import pytest
 from packaging import version
 from typing import Optional, List
 
+try:
+    from pathlib import Path
+except ImportError:
+    from pathlib2 import Path
+
 
 def pytest_addoption(parser):
     group = parser.getgroup('snapshot')
