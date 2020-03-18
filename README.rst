@@ -10,13 +10,9 @@ pytest-snapshot
     :target: https://pypi.org/project/pytest-snapshot
     :alt: Python versions
 
-.. image:: https://travis-ci.org/joseph-roitman/pytest-snapshot.svg?branch=master
-    :target: https://travis-ci.org/joseph-roitman/pytest-snapshot
-    :alt: See Build Status on Travis CI
-
-.. image:: https://ci.appveyor.com/api/projects/status/github/joseph-roitman/pytest-snapshot?branch=master
-    :target: https://ci.appveyor.com/project/joseph-roitman/pytest-snapshot/branch/master
-    :alt: See Build Status on AppVeyor
+.. image:: https://github.com/joseph-roitman/pytest-snapshot/workflows/CI/badge.svg?branch=master
+   :target: https://github.com/joseph-roitman/pytest-snapshot/actions?workflow=CI
+   :alt: CI Status
 
 A plugin to enable snapshot testing with pytest.
 
