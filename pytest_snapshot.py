@@ -52,5 +52,9 @@ class Snapshot(object):
         if self._snapshot_update:
             raise NotImplementedError
 
-        expected_value = self._snapshot_path(snapshot_name).read_text()
-        assert expected_value == value
+        snapshot_path = self._snapshot_path(snapshot_name)
+        if snapshot_path.exists():
+            expected_value = snapshot_path.read_text()
+            assert expected_value == value
+        else:
+            raise AssertionError("Snapshot '{}' doesn't exist in '{}'.\nRun pytest with --snapshot-update to create it.".format(snapshot_name, self.snapshot_dir))
