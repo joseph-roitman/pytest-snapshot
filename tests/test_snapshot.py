@@ -32,8 +32,8 @@ def test_assert_match_failure(testdir, basic_case_dir):
     result = testdir.runpytest('-v')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        ">* assert expected_value == value",
-        "E* AssertionError: assert 'the value of snapshot1.txt' == 'the INCORRECT * snapshot1.txt'",
+        ">* assert *value == *value",
+        "E* AssertionError: assert * == *",
         "E* - the value of snapshot1.txt",
         "E* + the INCORRECT value of snapshot1.txt",
         "E* ?    ++++++++++",

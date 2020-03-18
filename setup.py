@@ -25,6 +25,7 @@ setup(
     py_modules=['pytest_snapshot'],
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
     install_requires=[
+        'packaging',
         'pytest>=3.0.0',
         'typing',
     ],

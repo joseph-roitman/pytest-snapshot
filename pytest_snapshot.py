@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-from pathlib2 import Path
+from packaging import version
 from typing import Optional, List
 
 
@@ -83,6 +83,11 @@ class Snapshot(object):
         else:
             if snapshot_path.exists():
                 expected_value = snapshot_path.read_text()
-                assert expected_value == value
+                # pytest diffs before version 5.4.0 required expected to be on the left hand side.
+                expected_on_right = version.parse(pytest.__version__) >= version.parse("5.4.0")
+                if expected_on_right:
+                    assert value == expected_value
+                else:
+                    assert expected_value == value
             else:
                 raise AssertionError("Snapshot '{}' doesn't exist in '{}'.\nRun pytest with --snapshot-update to create it.".format(snapshot_name, self.snapshot_dir))
