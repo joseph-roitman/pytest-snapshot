@@ -72,3 +72,4 @@ target/
 # pyenv
 .python-version
 
+pytest_snapshot/_version.py

@@ -13,7 +13,6 @@ def read(fname):
 
 setup(
     name='pytest-snapshot',
-    version='0.1.0',
     author='Joseph Roitman',
     author_email='joseph.roitman@gmail.com',
     maintainer='Joseph Roitman',
@@ -52,4 +51,6 @@ setup(
             'snapshot = pytest_snapshot.plugin',
         ],
     },
+    use_scm_version={"write_to": "pytest_snapshot/_version.py"},
+    setup_requires=["setuptools-scm", "setuptools>=40.0", "wheel"],
 )
