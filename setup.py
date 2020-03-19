@@ -13,7 +13,6 @@ def read(fname):
 
 setup(
     name='pytest-snapshot',
-    version='0.1.0',
     author='Joseph Roitman',
     author_email='joseph.roitman@gmail.com',
     maintainer='Joseph Roitman',
@@ -22,7 +21,7 @@ setup(
     url='https://github.com/joseph-roitman/pytest-snapshot',
     description='A plugin to enable snapshot testing with pytest.',
     long_description=read('README.rst'),
-    py_modules=['pytest_snapshot'],
+    packages=['pytest_snapshot'],
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
     install_requires=[
         'packaging',
@@ -49,7 +48,9 @@ setup(
     ],
     entry_points={
         'pytest11': [
-            'snapshot = pytest_snapshot',
+            'snapshot = pytest_snapshot.plugin',
         ],
     },
+    use_scm_version={"write_to": "pytest_snapshot/_version.py"},
+    setup_requires=["setuptools-scm", "setuptools>=40.0", "wheel"],
 )
