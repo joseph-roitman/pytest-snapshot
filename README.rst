@@ -14,7 +14,48 @@ pytest-snapshot
    :target: https://github.com/joseph-roitman/pytest-snapshot/actions?workflow=CI
    :alt: CI Status
 
-A plugin to enable snapshot testing with pytest.
+A plugin for snapshot testing with pytest.
+
+This library was inspired by `jest's snapshot testing`_.
+Snapshot testing can be used to test that the value of an expression does not change unexpectedly.
+The added benefits of snapshot testing is that
+
+* They are easy to create.
+* They are easy to update due to changes in the expected value.
+
+For example::
+
+    >>> def test_function_output():
+    ...     assert foo() == 'expected result'
+
+can be re-written using snapshot testing as::
+
+    >>> def test_function_output_with_snapshot(snapshot):
+    ...     snapshot.snapshot_dir = 'snapshots/'
+    ...     snapshot.assert_match(foo(), 'foo_output.txt')
+
+The author of the test should then run ``pytest --snapshot-update``.
+This creates the snapshot file ``snapshots/foo_output.txt`` containing the value of ``foo()``.
+The author should then verify that the content of the snapshot file is valid and commit it to version control.
+Now, whenever the test is run, it will assert that the output of ``foo()`` is equal to the snapshot.
+
+What if the behaviour of ``foo()`` changes and the test starts to fail?
+
+In the first example, the developer would need to manually update the expected result in ``test_function_output``.
+This could be tedious if the expected result is very large, or there are many tests.
+
+In the second example, the developer would need to simply
+
+1. run ``pytest --snapshot-update``
+2. verify that the snapshot file contains the new expected result
+3. commit it to version control.
+
+Snapshot testing can be used for expressions whose values are strings.
+For other types, you should first create a *human readable* textual representation of the value.
+For example, to snapshot test a *json-serializable* value, you could either convert it into json
+or preferably convert it into the more readable yaml using `PyYaml`_::
+
+    >>> snapshot.assert_match(yaml.dumps(foo()), 'foo_output.yml')
 
 ----
 
@@ -24,13 +65,15 @@ This `pytest`_ plugin was generated with `Cookiecutter`_ along with `@hackebrot`
 Features
 --------
 
-* TODO
+* snapshot testing of strings
+* paths to snapshot files are controlled by the user
 
 
 Requirements
 ------------
 
-* TODO
+* Python 2.7 or 3.5+ or `PyPy`_
+* `pytest`_ 3.0+
 
 
 Installation
@@ -44,7 +87,9 @@ You can install "pytest-snapshot" via `pip`_ from `PyPI`_::
 Usage
 -----
 
-* TODO
+    >>> def test_function_output_with_snapshot(snapshot):
+    ...     snapshot.snapshot_dir = 'snapshots/'
+    ...     snapshot.assert_match(foo(), 'foo_output.txt')
 
 Contributing
 ------------
@@ -73,4 +118,7 @@ If you encounter any problems, please `file an issue`_ along with a detailed des
 .. _`pytest`: https://github.com/pytest-dev/pytest
 .. _`tox`: https://tox.readthedocs.io/en/latest/
 .. _`pip`: https://pypi.org/project/pip/
-.. _`PyPI`: https://pypi.org/project
+.. _`PyPI`: https://pypi.org
+.. _`PyPy`: https://www.pypy.org/
+.. _`jest's snapshot testing`: https://jestjs.io/docs/en/snapshot-testing
+.. _`PyYaml`: https://pypi.org/project/PyYAML/
