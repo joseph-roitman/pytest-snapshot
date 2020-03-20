@@ -68,7 +68,8 @@ class Snapshot(object):
                         path.unlink()
                     message_lines.append('  Deleted snapshots:')
                 else:
-                    message_lines.append('  Snapshots that should be deleted: (run pytest with --allow-snapshot-deletion to delete them)')
+                    message_lines.append('  Snapshots that should be deleted: '
+                                         '(run pytest with --allow-snapshot-deletion to delete them)')
 
                 message_lines.extend('    ' + str(s.relative_to(self.snapshot_dir)) for s in self._snapshots_to_delete)
 
