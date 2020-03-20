@@ -21,7 +21,7 @@ Snapshot testing can be used to test that the value of an expression does not ch
 The added benefits of snapshot testing are that
 
 * They are easy to create.
-* They are easy to update due to changes in the expected value.
+* They are easy to update when the expected value of a test changes.
 
 Instead of manually updating tests when the expected value of an expression changes,
 the developer simply needs to
@@ -40,7 +40,7 @@ Features
 
 * snapshot testing of strings
 * snapshot testing of collections of strings
-* the user has complete control over the snapshot file paths and contents
+* the user has complete control over the snapshot file path and content
 
 
 Requirements
@@ -91,7 +91,7 @@ What if the behaviour of ``foo()`` changes and the test starts to fail?
 In the first example, the developer would need to manually update the expected result in ``test_function_output``.
 This could be tedious if the expected result is large or there are many tests.
 
-In the second example, the developer would need to simply
+In the second example, the developer would simply
 
 1. run ``pytest --snapshot-update``
 2. verify that the snapshot file contains the new expected result
@@ -124,13 +124,13 @@ containing files ``john.json`` and ``jane.json``.
             'jane.json': '{"first name": "Jane", "last name": "Doe", "age": 21}',
         }, 'people')
 
-When running ``pytest --snapshot-update``, snapshot files will added, updated, or deleted as necessary.
-As a safety measure, snapshots will only be deleted if ``--allow-snapshot-deletion`` is used too.
+When running ``pytest --snapshot-update``, snapshot files will be added, updated, or deleted as necessary.
+As a safety measure, snapshots will only be deleted when using the ``--allow-snapshot-deletion`` flag.
 
 Common use case
 ===============
 A quick way to create snapshot tests is to create a directory containing many test case directories.
-In each test case, add a file containing the input to the function you wish to test.
+In each test case, add files containing the inputs to the function you wish to test.
 For example:
 
 .. code-block::
@@ -183,9 +183,11 @@ If in the future we change the tested function, we can quickly fix the test with
 
 Contributing
 ------------
-Contributions are very welcome. Tests can be run with `tox`_, please ensure
-the coverage at least stays the same before you submit a pull request.
+Contributions are very welcome. Before contributing, please discuss the change with me.
+I wish to keep this plugin flexible and not enforce any project layout on the users.
 
+Tests can be run with `tox`_, please ensure
+the coverage at least stays the same before you submit a pull request.
 
 License
 -------
