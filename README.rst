@@ -104,7 +104,7 @@ or preferably convert it into the more readable yaml format using `PyYaml`_:
 
 .. code-block:: python
 
-    snapshot.assert_match(yaml.dumps(foo()), 'foo_output.yml')
+    snapshot.assert_match(yaml.dump(foo()), 'foo_output.yml')
 
 assert_match_dir
 ================
@@ -126,6 +126,60 @@ containing files ``john.json`` and ``jane.json``.
 
 When running ``pytest --snapshot-update``, snapshot files will added, updated, or deleted as necessary.
 As a safety measure, snapshots will only be deleted if ``--allow-snapshot-deletion`` is used too.
+
+Common use case
+===============
+A quick way to create snapshot tests is to create a directory containing many test case directories.
+In each test case, add a file containing the input to the function you wish to test.
+For example:
+
+.. code-block::
+
+    test_cases
+        case1
+            input.json
+        case2
+            input.json
+        ...
+
+Next, add a test that is parametrized on all test case directories. The test should
+
+* read input from the test case directory
+* call the function to be tested
+* snapshot the result to the test case directory
+
+.. code-block:: python
+
+    import json
+    import os
+
+    import pytest
+    import yaml
+    from pathlib import Path
+
+
+    def json_to_yaml(json_string):
+        obj = json.loads(json_string)
+        return yaml.dump(obj, indent=2)
+
+
+    @pytest.mark.parametrize('case_dir', [os.path.join('test_cases', d) for d in os.listdir('test_cases')])
+    def test_json(case_dir, snapshot):
+        case_dir = Path(case_dir)
+
+        # Read input files from the case directory.
+        input_json = case_dir.joinpath('input.json').read_text()
+
+        # Call the tested function.
+        output_yaml = json_to_yaml(input_json)
+
+        # Snapshot the return value.
+        snapshot.snapshot_dir = case_dir
+        snapshot.assert_match(output_yaml, 'output.yml')
+
+Now, we can run ``pytest --snapshot-update`` to create an ``output.yml`` snapshot for each test case.
+If in the future we change the tested function, we can quickly fix the test with another ``pytest --snapshot-update``.
+
 
 Contributing
 ------------
