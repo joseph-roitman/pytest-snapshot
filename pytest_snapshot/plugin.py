@@ -97,10 +97,20 @@ class Snapshot(object):
             if expected_value is not None:
                 # pytest diffs before version 5.4.0 required expected to be on the left hand side.
                 expected_on_right = version.parse(pytest.__version__) >= version.parse("5.4.0")
-                if expected_on_right:
-                    assert value == expected_value
+                try:
+                    if expected_on_right:
+                        assert value == expected_value
+                    else:
+                        assert expected_value == value
+                except AssertionError as e:
+                    snapshot_diff_msg = str(e)
                 else:
-                    assert expected_value == value
+                    snapshot_diff_msg = None
+
+                if snapshot_diff_msg:
+                    snapshot_diff_msg = 'value does not match the expected value in snapshot {}\n{}'.format(
+                        snapshot_path, snapshot_diff_msg)
+                    raise AssertionError(snapshot_diff_msg)
             else:
                 raise AssertionError(
                     "Snapshot '{}' doesn't exist in '{}'.\nRun pytest with --snapshot-update to create it.".format(
