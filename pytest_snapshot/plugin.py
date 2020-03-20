@@ -86,6 +86,7 @@ class Snapshot(object):
             expected_value = None
 
         if self._snapshot_update:
+            snapshot_path.parent.mkdir(parents=True, exist_ok=True)
             if expected_value is not None:
                 if expected_value != value:
                     snapshot_path.write_text(value)

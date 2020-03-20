@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import pytest
 
 
@@ -90,14 +88,14 @@ def test_assert_match_create_new_snapshot(testdir, basic_case_dir):
     testdir.makepyfile("""
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
-            snapshot.assert_match(u'the NEW value of new_snapshot1.txt', 'new_snapshot1.txt')
+            snapshot.assert_match(u'the NEW value of new_snapshot1.txt', 'sub_dir/new_snapshot1.txt')
     """)
     result = testdir.runpytest('-v', '--snapshot-update')
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
         "E* AssertionError: The following snapshots were created in 'case_dir':",
-        'E*   new_snapshot1.txt'
+        'E*   sub_dir*new_snapshot1.txt'
     ])
     assert result.ret == 1
 
