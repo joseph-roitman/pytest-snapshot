@@ -17,24 +17,34 @@ def pytest_addoption(parser):
         action='store_true',
         help='Update snapshots.'
     )
+    group.addoption(
+        '--allow-snapshot-deletion',
+        action='store_true',
+        help='Allow snapshot deletion when updating snapshots.'
+    )
 
 
 @pytest.fixture
 def snapshot(request):
-    with Snapshot(request.config.option.snapshot_update) as snapshot:
+    with Snapshot(request.config.option.snapshot_update,
+                  request.config.option.allow_snapshot_deletion) as snapshot:
         yield snapshot
 
 
 class Snapshot(object):
+    _snapshot_update = None  # type: bool
+    _allow_snapshot_deletion = None  # type: bool
     _created_snapshots = None  # type: List[str]
     _updated_snapshots = None  # type: List[str]
-    _snapshot_update = None  # type: bool
+    _snapshots_to_delete = None  # type: List[Path]
     _snapshot_dir = None  # type: Optional[Path]
 
-    def __init__(self, snapshot_update):
+    def __init__(self, snapshot_update, allow_snapshot_deletion):
+        self._snapshot_update = snapshot_update
+        self._allow_snapshot_deletion = allow_snapshot_deletion
         self._created_snapshots = []
         self._updated_snapshots = []
-        self._snapshot_update = snapshot_update
+        self._snapshots_to_delete = []
 
     def __enter__(self):
         return self
@@ -42,7 +52,7 @@ class Snapshot(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None:
             return False
-        if self._created_snapshots or self._updated_snapshots:
+        if self._created_snapshots or self._updated_snapshots or self._snapshots_to_delete:
             message_lines = []
             if self._created_snapshots:
                 message_lines.append("The following snapshots were created in '{}':".format(self._snapshot_dir))
@@ -51,6 +61,20 @@ class Snapshot(object):
             if self._updated_snapshots:
                 message_lines.append("The following snapshots were updated in '{}':".format(self._snapshot_dir))
                 message_lines.extend('  ' + s for s in self._updated_snapshots)
+
+            if self._snapshots_to_delete:
+                if self._allow_snapshot_deletion:
+                    for path in self._snapshots_to_delete:
+                        path.unlink()
+                    message_lines.append("The following snapshots were deleted in '{}':".format(self._snapshot_dir))
+                else:
+                    message_lines.append("The following snapshots should be deleted in '{}':".format(
+                        self._snapshot_dir))
+                    message_lines.append('Delete them manually or run pytest with --allow-snapshot-deletion '
+                                         'to automatically delete them.')
+
+                message_lines.extend('  ' + str(s.relative_to(self._snapshot_dir)) for s in self._snapshots_to_delete)
+
             raise AssertionError('\n'.join(message_lines))
 
     @property
@@ -116,3 +140,34 @@ class Snapshot(object):
                 raise AssertionError(
                     "Snapshot '{}' doesn't exist in '{}'.\nRun pytest with --snapshot-update to create it.".format(
                         snapshot_name, self.snapshot_dir))
+
+    def assert_match_dir(self, values_by_filename, snapshot_dir_name):
+        snapshot_dir_path = self._snapshot_path(snapshot_dir_name)
+
+        if snapshot_dir_path.is_dir():
+            existing_names = {p.name for p in snapshot_dir_path.iterdir()}
+        elif snapshot_dir_path.exists():
+            raise AssertionError('snapshot exists but is not a directory: {}'.format(snapshot_dir_path))
+        else:
+            existing_names = set()
+
+        names = set(values_by_filename)
+        added_names = names - existing_names
+        removed_names = existing_names - names
+        if self._snapshot_update:
+            self._snapshots_to_delete.extend(snapshot_dir_path.joinpath(name) for name in sorted(removed_names))
+        else:
+            if added_names or removed_names:
+                message_lines = ['Unexpected snapshot files in {}'.format(snapshot_dir_path)]
+                if added_names:
+                    message_lines.append("The following snapshots do not exist:")
+                    message_lines.extend('  ' + s for s in added_names)
+                if removed_names:
+                    message_lines.append("No values were given for snapshots:")
+                    message_lines.extend('  ' + s for s in removed_names)
+                message_lines.append('Run pytest with --snapshot-update to update the snapshot directory.')
+                raise AssertionError('\n'.join(message_lines))
+
+        # Call assert_match to add, update, or assert equality for all snapshot files in the directory.
+        for name, value in values_by_filename.items():
+            self.assert_match(value, '{}/{}'.format(snapshot_dir_name, name))
