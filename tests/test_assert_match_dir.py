@@ -59,7 +59,7 @@ def test_assert_match_dir_missing_snapshot(testdir, basic_case_dir):
     result = testdir.runpytest('-v')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        "E* AssertionError: Values do not match snapshots in case_dir\dict_snapshot1",
+        "E* AssertionError: Values do not match snapshots in case_dir*dict_snapshot1",
         'E*   Values without snapshots:',
         'E*     new_obj.txt',
         'E*   Run pytest with --snapshot-update to update the snapshot directory.',
@@ -78,7 +78,7 @@ def test_assert_match_dir_missing_value(testdir, basic_case_dir):
     result = testdir.runpytest('-v')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        "E* AssertionError: Values do not match snapshots in case_dir\dict_snapshot1",
+        "E* AssertionError: Values do not match snapshots in case_dir*dict_snapshot1",
         'E*   Snapshots without values:',
         'E*     obj2.txt',
         'E*   Run pytest with --snapshot-update to update the snapshot directory.',
