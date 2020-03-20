@@ -115,11 +115,3 @@ def test_assert_match_existing_snapshot_is_directory(testdir, basic_case_dir):
         "E* AssertionError: invalid snapshot file case_dir*directory1",
     ])
     assert result.ret == 1
-
-
-def test_help_message(testdir):
-    result = testdir.runpytest('--help')
-    result.stdout.fnmatch_lines([
-        'snapshot:',
-        '*--snapshot-update*Update snapshots.',
-    ])
