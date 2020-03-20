@@ -60,7 +60,7 @@ def test_assert_match_missing_snapshot(testdir, basic_case_dir):
     result = testdir.runpytest('-v')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        "E* snapshot snapshot_that_doesnt_exist.txt doesn't exist in case_dir. "
+        "E* snapshot case_dir*snapshot_that_doesnt_exist.txt doesn't exist. "
         "(run pytest with --snapshot-update to create it)",
     ])
     assert result.ret == 1

@@ -135,8 +135,7 @@ class Snapshot(object):
                     raise AssertionError(snapshot_diff_msg)
             else:
                 raise AssertionError(
-                    "snapshot {} doesn't exist in {}. (run pytest with --snapshot-update to create it)".format(
-                        snapshot_name, self.snapshot_dir))
+                    "snapshot {} doesn't exist. (run pytest with --snapshot-update to create it)".format(snapshot_path))
 
     def assert_match_dir(self, values_by_filename, snapshot_dir_name):
         snapshot_dir_path = self._snapshot_path(snapshot_dir_name)
