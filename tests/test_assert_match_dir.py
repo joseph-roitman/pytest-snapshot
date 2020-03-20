@@ -115,8 +115,9 @@ def test_assert_match_dir_update_existing_snapshot(testdir, basic_case_dir):
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
-        "E* AssertionError: The following snapshots were updated in 'case_dir':",
-        'E*   dict_snapshot1*obj2.txt'
+        "E* AssertionError: Snapshot directory was modified: case_dir",
+        'E* Updated snapshots:',
+        'E*   dict_snapshot1*obj2.txt',
     ])
     assert result.ret == 1
 
@@ -137,8 +138,9 @@ def test_assert_match_dir_create_new_snapshot_file(testdir, basic_case_dir):
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
-        "E* AssertionError: The following snapshots were created in 'case_dir':",
-        'E*   dict_snapshot1*new_obj.txt'
+        "E* AssertionError: Snapshot directory was modified: case_dir",
+        'E* Created snapshots:',
+        'E*   dict_snapshot1*new_obj.txt',
     ])
     assert result.ret == 1
 
@@ -157,9 +159,9 @@ def test_assert_match_dir_delete_snapshot_file(testdir, basic_case_dir):
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
-        "E* AssertionError: The following snapshots should be deleted in 'case_dir':",
-        'E* Delete them manually or run pytest with --allow-snapshot-deletion to automatically delete them.',
-        'E*   dict_snapshot1*obj2.txt'
+        "E* AssertionError: Snapshot directory was modified: case_dir",
+        'E* Snapshots that should be deleted: (run pytest with --allow-snapshot-deletion to delete them)',
+        'E*   dict_snapshot1*obj2.txt',
     ])
     assert result.ret == 1
 
@@ -167,8 +169,9 @@ def test_assert_match_dir_delete_snapshot_file(testdir, basic_case_dir):
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
-        "E* AssertionError: The following snapshots were deleted in 'case_dir':",
-        'E*   dict_snapshot1*obj2.txt'
+        'E* AssertionError: Snapshot directory was modified: case_dir',
+        'E* Deleted snapshots:',
+        'E*   dict_snapshot1*obj2.txt',
     ])
     assert result.ret == 1
 
@@ -187,8 +190,9 @@ def test_assert_match_dir_create_new_snapshot_dir(testdir, basic_case_dir):
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
-        "E* AssertionError: The following snapshots were created in 'case_dir':",
-        'E*   new_dict_snapshot*obj1.txt'
+        'E* AssertionError: Snapshot directory was modified: case_dir',
+        'E* Created snapshots:',
+        'E*   new_dict_snapshot*obj1.txt',
     ])
     assert result.ret == 1
 

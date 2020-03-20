@@ -53,27 +53,24 @@ class Snapshot(object):
         if exc_type is not None:
             return False
         if self._created_snapshots or self._updated_snapshots or self._snapshots_to_delete:
-            message_lines = []
+            message_lines = ['Snapshot directory was modified: {}'.format(self.snapshot_dir)]
             if self._created_snapshots:
-                message_lines.append("The following snapshots were created in '{}':".format(self._snapshot_dir))
+                message_lines.append('Created snapshots:')
                 message_lines.extend('  ' + s for s in self._created_snapshots)
 
             if self._updated_snapshots:
-                message_lines.append("The following snapshots were updated in '{}':".format(self._snapshot_dir))
+                message_lines.append('Updated snapshots:')
                 message_lines.extend('  ' + s for s in self._updated_snapshots)
 
             if self._snapshots_to_delete:
                 if self._allow_snapshot_deletion:
                     for path in self._snapshots_to_delete:
                         path.unlink()
-                    message_lines.append("The following snapshots were deleted in '{}':".format(self._snapshot_dir))
+                    message_lines.append('Deleted snapshots:')
                 else:
-                    message_lines.append("The following snapshots should be deleted in '{}':".format(
-                        self._snapshot_dir))
-                    message_lines.append('Delete them manually or run pytest with --allow-snapshot-deletion '
-                                         'to automatically delete them.')
+                    message_lines.append('Snapshots that should be deleted: (run pytest with --allow-snapshot-deletion to delete them)')
 
-                message_lines.extend('  ' + str(s.relative_to(self._snapshot_dir)) for s in self._snapshots_to_delete)
+                message_lines.extend('  ' + str(s.relative_to(self.snapshot_dir)) for s in self._snapshots_to_delete)
 
             raise AssertionError('\n'.join(message_lines))
 
