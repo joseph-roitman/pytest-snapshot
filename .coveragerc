@@ -1,0 +1,8 @@
+[run]
+branch = 1
+
+[report]
+include =
+    pytest_snapshot/*
+    tests/*
+skip_covered = 1

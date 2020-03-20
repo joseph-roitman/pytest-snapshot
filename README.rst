@@ -14,6 +14,11 @@ pytest-snapshot
    :target: https://github.com/joseph-roitman/pytest-snapshot/actions?workflow=CI
    :alt: CI Status
 
+.. image:: https://img.shields.io/codecov/c/github/joseph-roitman/pytest-snapshot.svg?style=flat
+   :alt: Coverage
+   :target: https://codecov.io/gh/joseph-roitman/pytest-snapshot
+
+
 A plugin for snapshot testing with pytest.
 
 This library was inspired by `jest's snapshot testing`_.
