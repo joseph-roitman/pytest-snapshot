@@ -1,6 +1,4 @@
 [run]
-parallel = 1
-source = ${COVERAGE_SRC}.
 branch = 1
 
 [report]
