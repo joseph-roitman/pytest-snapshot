@@ -59,10 +59,10 @@ def test_assert_match_dir_missing_snapshot(testdir, basic_case_dir):
     result = testdir.runpytest('-v')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        "E* AssertionError: Unexpected snapshot files in case_dir\dict_snapshot1",
-        'E* The following snapshots do not exist:',
-        'E*   new_obj.txt',
-        'E* Run pytest with --snapshot-update to update the snapshot directory.',
+        "E* AssertionError: Values do not match snapshots in case_dir\dict_snapshot1",
+        'E*   Values without snapshots:',
+        'E*     new_obj.txt',
+        'E*   Run pytest with --snapshot-update to update the snapshot directory.',
     ])
     assert result.ret == 1
 
@@ -78,10 +78,10 @@ def test_assert_match_dir_missing_value(testdir, basic_case_dir):
     result = testdir.runpytest('-v')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        "E* AssertionError: Unexpected snapshot files in case_dir\dict_snapshot1",
-        'E* No values were given for snapshots:',
-        'E*   obj2.txt',
-        'E* Run pytest with --snapshot-update to update the snapshot directory.',
+        "E* AssertionError: Values do not match snapshots in case_dir\dict_snapshot1",
+        'E*   Snapshots without values:',
+        'E*     obj2.txt',
+        'E*   Run pytest with --snapshot-update to update the snapshot directory.',
     ])
     assert result.ret == 1
 
@@ -116,8 +116,8 @@ def test_assert_match_dir_update_existing_snapshot(testdir, basic_case_dir):
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
         "E* AssertionError: Snapshot directory was modified: case_dir",
-        'E* Updated snapshots:',
-        'E*   dict_snapshot1*obj2.txt',
+        'E*   Updated snapshots:',
+        'E*     dict_snapshot1*obj2.txt',
     ])
     assert result.ret == 1
 
@@ -139,8 +139,8 @@ def test_assert_match_dir_create_new_snapshot_file(testdir, basic_case_dir):
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
         "E* AssertionError: Snapshot directory was modified: case_dir",
-        'E* Created snapshots:',
-        'E*   dict_snapshot1*new_obj.txt',
+        'E*   Created snapshots:',
+        'E*     dict_snapshot1*new_obj.txt',
     ])
     assert result.ret == 1
 
@@ -160,8 +160,8 @@ def test_assert_match_dir_delete_snapshot_file(testdir, basic_case_dir):
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
         "E* AssertionError: Snapshot directory was modified: case_dir",
-        'E* Snapshots that should be deleted: (run pytest with --allow-snapshot-deletion to delete them)',
-        'E*   dict_snapshot1*obj2.txt',
+        'E*   Snapshots that should be deleted: (run pytest with --allow-snapshot-deletion to delete them)',
+        'E*     dict_snapshot1*obj2.txt',
     ])
     assert result.ret == 1
 
@@ -170,8 +170,8 @@ def test_assert_match_dir_delete_snapshot_file(testdir, basic_case_dir):
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
         'E* AssertionError: Snapshot directory was modified: case_dir',
-        'E* Deleted snapshots:',
-        'E*   dict_snapshot1*obj2.txt',
+        'E*   Deleted snapshots:',
+        'E*     dict_snapshot1*obj2.txt',
     ])
     assert result.ret == 1
 
@@ -191,8 +191,8 @@ def test_assert_match_dir_create_new_snapshot_dir(testdir, basic_case_dir):
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
         'E* AssertionError: Snapshot directory was modified: case_dir',
-        'E* Created snapshots:',
-        'E*   new_dict_snapshot*obj1.txt',
+        'E*   Created snapshots:',
+        'E*     new_dict_snapshot*obj1.txt',
     ])
     assert result.ret == 1
 

@@ -55,22 +55,22 @@ class Snapshot(object):
         if self._created_snapshots or self._updated_snapshots or self._snapshots_to_delete:
             message_lines = ['Snapshot directory was modified: {}'.format(self.snapshot_dir)]
             if self._created_snapshots:
-                message_lines.append('Created snapshots:')
-                message_lines.extend('  ' + s for s in self._created_snapshots)
+                message_lines.append('  Created snapshots:')
+                message_lines.extend('    ' + s for s in self._created_snapshots)
 
             if self._updated_snapshots:
-                message_lines.append('Updated snapshots:')
-                message_lines.extend('  ' + s for s in self._updated_snapshots)
+                message_lines.append('  Updated snapshots:')
+                message_lines.extend('    ' + s for s in self._updated_snapshots)
 
             if self._snapshots_to_delete:
                 if self._allow_snapshot_deletion:
                     for path in self._snapshots_to_delete:
                         path.unlink()
-                    message_lines.append('Deleted snapshots:')
+                    message_lines.append('  Deleted snapshots:')
                 else:
-                    message_lines.append('Snapshots that should be deleted: (run pytest with --allow-snapshot-deletion to delete them)')
+                    message_lines.append('  Snapshots that should be deleted: (run pytest with --allow-snapshot-deletion to delete them)')
 
-                message_lines.extend('  ' + str(s.relative_to(self.snapshot_dir)) for s in self._snapshots_to_delete)
+                message_lines.extend('    ' + str(s.relative_to(self.snapshot_dir)) for s in self._snapshots_to_delete)
 
             raise AssertionError('\n'.join(message_lines))
 
@@ -135,7 +135,7 @@ class Snapshot(object):
                     raise AssertionError(snapshot_diff_msg)
             else:
                 raise AssertionError(
-                    "Snapshot '{}' doesn't exist in '{}'.\nRun pytest with --snapshot-update to create it.".format(
+                    "snapshot {} doesn't exist in {}. (run pytest with --snapshot-update to create it)".format(
                         snapshot_name, self.snapshot_dir))
 
     def assert_match_dir(self, values_by_filename, snapshot_dir_name):
@@ -155,14 +155,14 @@ class Snapshot(object):
             self._snapshots_to_delete.extend(snapshot_dir_path.joinpath(name) for name in sorted(removed_names))
         else:
             if added_names or removed_names:
-                message_lines = ['Unexpected snapshot files in {}'.format(snapshot_dir_path)]
+                message_lines = ['Values do not match snapshots in {}'.format(snapshot_dir_path)]
                 if added_names:
-                    message_lines.append("The following snapshots do not exist:")
-                    message_lines.extend('  ' + s for s in added_names)
+                    message_lines.append("  Values without snapshots:")
+                    message_lines.extend('    ' + s for s in added_names)
                 if removed_names:
-                    message_lines.append("No values were given for snapshots:")
-                    message_lines.extend('  ' + s for s in removed_names)
-                message_lines.append('Run pytest with --snapshot-update to update the snapshot directory.')
+                    message_lines.append("  Snapshots without values:")
+                    message_lines.extend('    ' + s for s in removed_names)
+                message_lines.append('  Run pytest with --snapshot-update to update the snapshot directory.')
                 raise AssertionError('\n'.join(message_lines))
 
         # Call assert_match to add, update, or assert equality for all snapshot files in the directory.

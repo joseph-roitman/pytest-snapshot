@@ -60,8 +60,8 @@ def test_assert_match_missing_snapshot(testdir, basic_case_dir):
     result = testdir.runpytest('-v')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        "E* AssertionError: Snapshot 'snapshot_that_doesnt_exist.txt' doesn't exist in 'case_dir'.",
-        'E* Run pytest with --snapshot-update to create it.',
+        "E* snapshot snapshot_that_doesnt_exist.txt doesn't exist in case_dir. "
+        "(run pytest with --snapshot-update to create it)",
     ])
     assert result.ret == 1
 
@@ -91,9 +91,9 @@ def test_assert_match_update_existing_snapshot(testdir, basic_case_dir):
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
-        "E* Snapshot directory was modified: case_dir",
-        'E* Updated snapshots:',
-        'E*   snapshot1.txt',
+        "E* AssertionError: Snapshot directory was modified: case_dir",
+        'E*   Updated snapshots:',
+        'E*     snapshot1.txt',
     ])
     assert result.ret == 1
 
@@ -111,8 +111,8 @@ def test_assert_match_create_new_snapshot(testdir, basic_case_dir):
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
         "E* Snapshot directory was modified: case_dir",
-        'E* Created snapshots:',
-        'E*   sub_dir*new_snapshot1.txt',
+        'E*   Created snapshots:',
+        'E*     sub_dir*new_snapshot1.txt',
     ])
     assert result.ret == 1
 
