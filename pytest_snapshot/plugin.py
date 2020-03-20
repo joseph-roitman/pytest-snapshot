@@ -81,7 +81,7 @@ class Snapshot(object):
         if snapshot_path.is_file():
             expected_value = snapshot_path.read_text()
         elif snapshot_path.exists():
-            raise AssertionError('invalid snapshot file {}'.format(snapshot_path))
+            raise AssertionError('snapshot exists but is not a file: {}'.format(snapshot_path))
         else:
             expected_value = None
 

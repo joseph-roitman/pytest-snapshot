@@ -117,7 +117,7 @@ def test_assert_match_create_new_snapshot(testdir, basic_case_dir):
     assert_pytest_passes(testdir)  # assert that snapshot update worked
 
 
-def test_assert_match_existing_snapshot_is_directory(testdir, basic_case_dir):
+def test_assert_match_existing_snapshot_is_not_file(testdir, basic_case_dir):
     basic_case_dir.mkdir('directory1')
     testdir.makepyfile("""
         def test_sth(snapshot):
@@ -127,6 +127,6 @@ def test_assert_match_existing_snapshot_is_directory(testdir, basic_case_dir):
     result = testdir.runpytest('-v', '--snapshot-update')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        "E* AssertionError: invalid snapshot file case_dir*directory1",
+        "E* AssertionError: snapshot exists but is not a file: case_dir*directory1",
     ])
     assert result.ret == 1
