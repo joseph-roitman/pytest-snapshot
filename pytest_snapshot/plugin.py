@@ -64,7 +64,7 @@ class Snapshot(object):
         self._snapshot_dir = Path(value)
 
     def _snapshot_path(self, snapshot_name):
-        return self._snapshot_dir.joinpath(snapshot_name)
+        return self.snapshot_dir.joinpath(snapshot_name)
 
     def assert_match(self, value, snapshot_name):
         """

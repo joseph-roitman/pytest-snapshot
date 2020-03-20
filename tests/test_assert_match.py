@@ -10,6 +10,19 @@ def basic_case_dir(testdir):
     return case_dir
 
 
+def test_assert_match_without_setting_snapshot_dir(testdir, basic_case_dir):
+    testdir.makepyfile("""
+        def test_sth(snapshot):
+            snapshot.assert_match(u'the value of snapshot1.txt', 'snapshot1.txt')
+    """)
+    result = testdir.runpytest('-v')
+    result.stdout.fnmatch_lines([
+        '*::test_sth FAILED*',
+        "E* AssertionError: snapshot.snapshot_dir was not set.",
+    ])
+    assert result.ret == 1
+
+
 def test_assert_match_success(testdir, basic_case_dir):
     testdir.makepyfile("""
         def test_sth(snapshot):
