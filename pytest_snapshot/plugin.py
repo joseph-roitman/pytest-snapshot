@@ -77,17 +77,24 @@ class Snapshot(object):
         :type snapshot_name: str
         """
         snapshot_path = self._snapshot_path(snapshot_name)
+
+        if snapshot_path.is_file():
+            expected_value = snapshot_path.read_text()
+        elif snapshot_path.exists():
+            raise AssertionError('invalid snapshot file {}'.format(snapshot_path))
+        else:
+            expected_value = None
+
         if self._snapshot_update:
-            if snapshot_path.exists():
-                if snapshot_path.read_text() != value:
+            if expected_value is not None:
+                if expected_value != value:
                     snapshot_path.write_text(value)
                     self._updated_snapshots.append(snapshot_name)
             else:
                 snapshot_path.write_text(value)
                 self._created_snapshots.append(snapshot_name)
         else:
-            if snapshot_path.exists():
-                expected_value = snapshot_path.read_text()
+            if expected_value is not None:
                 # pytest diffs before version 5.4.0 required expected to be on the left hand side.
                 expected_on_right = version.parse(pytest.__version__) >= version.parse("5.4.0")
                 if expected_on_right:
