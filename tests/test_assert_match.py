@@ -1,5 +1,7 @@
 import pytest
 
+from tests.utils import assert_pytest_passes
+
 
 @pytest.fixture
 def basic_case_dir(testdir):
@@ -14,11 +16,7 @@ def test_assert_match_success(testdir, basic_case_dir):
             snapshot.snapshot_dir = 'case_dir'
             snapshot.assert_match(u'the value of snapshot1.txt', 'snapshot1.txt')
     """)
-    result = testdir.runpytest('-v')
-    result.stdout.fnmatch_lines([
-        '*::test_sth PASSED*',
-    ])
-    assert result.ret == 0
+    assert_pytest_passes(testdir)
 
 
 def test_assert_match_failure(testdir, basic_case_dir):
@@ -67,6 +65,8 @@ def test_assert_match_update_existing_snapshot_no_change(testdir, basic_case_dir
     ])
     assert result.ret == 0
 
+    assert_pytest_passes(testdir)  # assert that snapshot update worked
+
 
 def test_assert_match_update_existing_snapshot(testdir, basic_case_dir):
     testdir.makepyfile("""
@@ -83,6 +83,8 @@ def test_assert_match_update_existing_snapshot(testdir, basic_case_dir):
     ])
     assert result.ret == 1
 
+    assert_pytest_passes(testdir)  # assert that snapshot update worked
+
 
 def test_assert_match_create_new_snapshot(testdir, basic_case_dir):
     testdir.makepyfile("""
@@ -98,6 +100,8 @@ def test_assert_match_create_new_snapshot(testdir, basic_case_dir):
         'E*   sub_dir*new_snapshot1.txt'
     ])
     assert result.ret == 1
+
+    assert_pytest_passes(testdir)  # assert that snapshot update worked
 
 
 def test_assert_match_existing_snapshot_is_directory(testdir, basic_case_dir):
