@@ -81,12 +81,40 @@ def test_assert_match_update_existing_snapshot_no_change(testdir, basic_case_dir
     assert_pytest_passes(testdir)  # assert that snapshot update worked
 
 
-def test_assert_match_update_existing_snapshot(testdir, basic_case_dir):
+@pytest.mark.parametrize('case_dir_repr',
+                         ["'case_dir'",
+                          "str(Path('case_dir').absolute())",
+                          "Path('case_dir')",
+                          "Path('case_dir').absolute()"],
+                         ids=['relative_string_case_dir',
+                              'abs_string_case_dir',
+                              'relative_path_case_dir',
+                              'abs_path_case_dir'])
+@pytest.mark.parametrize('snapshot_name_repr',
+                         ["'snapshot1.txt'",
+                          "str(Path('case_dir/snapshot1.txt').absolute())",
+                          "Path('case_dir/snapshot1.txt')",  # TODO: support this or "Path('snapshot1.txt')"?
+                          "Path('case_dir/snapshot1.txt').absolute()"],
+                         ids=['relative_string_snapshot_name',
+                              'abs_string_snapshot_name',
+                              'relative_path_snapshot_name',
+                              'abs_path_snapshot_name'])
+def test_assert_match_update_existing_snapshot(testdir, basic_case_dir, case_dir_repr, snapshot_name_repr):
+    """
+    Tests that `Snapshot.assert_match` works when updating an existing snapshot.
+
+    Also tests that `Snapshot` supports absolute/relative str/Path snapshot directories and snapshot paths.
+    """
     testdir.makepyfile("""
+        try:
+            from pathlib import Path
+        except ImportError:
+            from pathlib2 import Path
+
         def test_sth(snapshot):
-            snapshot.snapshot_dir = 'case_dir'
-            snapshot.assert_match(u'the NEW value of snapshot1.txt', 'snapshot1.txt')
-    """)
+            snapshot.snapshot_dir = {case_dir_repr}
+            snapshot.assert_match(u'the NEW value of snapshot1.txt', {snapshot_name_repr})
+    """.format(case_dir_repr=case_dir_repr, snapshot_name_repr=snapshot_name_repr))
     result = testdir.runpytest('-v', '--snapshot-update')
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
