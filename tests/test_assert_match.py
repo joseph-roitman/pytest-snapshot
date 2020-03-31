@@ -23,6 +23,25 @@ def test_assert_match_without_setting_snapshot_dir(testdir, basic_case_dir):
     assert result.ret == 1
 
 
+def test_assert_match_with_external_snapshot_path(testdir, basic_case_dir):
+    testdir.makepyfile("""
+        try:
+            from pathlib import Path
+        except ImportError:
+            from pathlib2 import Path
+
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            snapshot.assert_match(u'the value of snapshot1.txt', Path('not_case_dir/snapshot1.txt').absolute())
+    """)
+    result = testdir.runpytest('-v')
+    result.stdout.fnmatch_lines([
+        '*::test_sth FAILED*',
+        "E* AssertionError: Snapshot path not_case_dir\snapshot1.txt is not in case_dir",
+    ])
+    assert result.ret == 1
+
+
 def test_assert_match_success(testdir, basic_case_dir):
     testdir.makepyfile("""
         def test_sth(snapshot):
