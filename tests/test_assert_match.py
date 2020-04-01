@@ -37,7 +37,7 @@ def test_assert_match_with_external_snapshot_path(testdir, basic_case_dir):
     result = testdir.runpytest('-v')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        "E* AssertionError: Snapshot path not_case_dir\snapshot1.txt is not in case_dir",
+        "E* AssertionError: Snapshot path not_case_dir*snapshot1.txt is not in case_dir",
     ])
     assert result.ret == 1
 
