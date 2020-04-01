@@ -95,6 +95,8 @@ class Snapshot(object):
         """
         if isinstance(snapshot_name, Path):
             snapshot_path = snapshot_name.absolute()
+            if self._snapshot_dir is None:
+                self.snapshot_dir = snapshot_path.parent
         else:
             snapshot_path = self.snapshot_dir.joinpath(snapshot_name)
 
