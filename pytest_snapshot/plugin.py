@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 
 import pytest
 from packaging import version
@@ -34,8 +35,8 @@ def snapshot(request):
 class Snapshot(object):
     _snapshot_update = None  # type: bool
     _allow_snapshot_deletion = None  # type: bool
-    _created_snapshots = None  # type: List[str]
-    _updated_snapshots = None  # type: List[str]
+    _created_snapshots = None  # type: List[Path]
+    _updated_snapshots = None  # type: List[Path]
     _snapshots_to_delete = None  # type: List[Path]
     _snapshot_dir = None  # type: Optional[Path]
 
@@ -53,14 +54,14 @@ class Snapshot(object):
         if exc_type is not None:
             return False
         if self._created_snapshots or self._updated_snapshots or self._snapshots_to_delete:
-            message_lines = ['Snapshot directory was modified: {}'.format(self.snapshot_dir)]
+            message_lines = ['Snapshot directory was modified: {}'.format(shorten_path(self.snapshot_dir))]
             if self._created_snapshots:
                 message_lines.append('  Created snapshots:')
-                message_lines.extend('    ' + s for s in self._created_snapshots)
+                message_lines.extend('    ' + str(s.relative_to(self.snapshot_dir)) for s in self._created_snapshots)
 
             if self._updated_snapshots:
                 message_lines.append('  Updated snapshots:')
-                message_lines.extend('    ' + s for s in self._updated_snapshots)
+                message_lines.extend('    ' + str(s.relative_to(self.snapshot_dir)) for s in self._updated_snapshots)
 
             if self._snapshots_to_delete:
                 if self._allow_snapshot_deletion:
@@ -83,10 +84,25 @@ class Snapshot(object):
 
     @snapshot_dir.setter
     def snapshot_dir(self, value):
-        self._snapshot_dir = Path(value)
+        self._snapshot_dir = Path(value).absolute()
 
     def _snapshot_path(self, snapshot_name):
-        return self.snapshot_dir.joinpath(snapshot_name)
+        """
+        Returns the absolute path to the given snapshot.
+
+        :type snapshot_name: str or Path
+        :rtype: Path
+        """
+        if isinstance(snapshot_name, Path):
+            snapshot_path = snapshot_name.absolute()
+        else:
+            snapshot_path = self.snapshot_dir.joinpath(snapshot_name)
+
+        if self.snapshot_dir not in snapshot_path.parents:
+            raise AssertionError('Snapshot path {} is not in {}'.format(
+                shorten_path(snapshot_path), shorten_path(self.snapshot_dir)))
+
+        return snapshot_path
 
     def assert_match(self, value, snapshot_name):
         """
@@ -96,14 +112,14 @@ class Snapshot(object):
         The test will fail if the value changed.
 
         :type value: str
-        :type snapshot_name: str
+        :type snapshot_name: str or Path
         """
         snapshot_path = self._snapshot_path(snapshot_name)
 
         if snapshot_path.is_file():
             expected_value = snapshot_path.read_text()
         elif snapshot_path.exists():
-            raise AssertionError('snapshot exists but is not a file: {}'.format(snapshot_path))
+            raise AssertionError('snapshot exists but is not a file: {}'.format(shorten_path(snapshot_path)))
         else:
             expected_value = None
 
@@ -112,10 +128,10 @@ class Snapshot(object):
             if expected_value is not None:
                 if expected_value != value:
                     snapshot_path.write_text(value)
-                    self._updated_snapshots.append(snapshot_name)
+                    self._updated_snapshots.append(snapshot_path)
             else:
                 snapshot_path.write_text(value)
-                self._created_snapshots.append(snapshot_name)
+                self._created_snapshots.append(snapshot_path)
         else:
             if expected_value is not None:
                 # pytest diffs before version 5.4.0 required expected to be on the left hand side.
@@ -132,19 +148,29 @@ class Snapshot(object):
 
                 if snapshot_diff_msg:
                     snapshot_diff_msg = 'value does not match the expected value in snapshot {}\n{}'.format(
-                        snapshot_path, snapshot_diff_msg)
+                        shorten_path(snapshot_path), snapshot_diff_msg)
                     raise AssertionError(snapshot_diff_msg)
             else:
                 raise AssertionError(
-                    "snapshot {} doesn't exist. (run pytest with --snapshot-update to create it)".format(snapshot_path))
+                    "snapshot {} doesn't exist. (run pytest with --snapshot-update to create it)".format(
+                        shorten_path(snapshot_path)))
 
     def assert_match_dir(self, values_by_filename, snapshot_dir_name):
+        """
+        Asserts that the values in values_by_filename equal the current values in the given snapshot directory.
+
+        If pytest was run with the --snapshot-update flag, the snapshots will instead be updated.
+        The test will fail there were any changes to the snapshots.
+
+        :type values_by_filename: dict[str, str]
+        :type snapshot_dir_name: str or Path
+        """
         snapshot_dir_path = self._snapshot_path(snapshot_dir_name)
 
         if snapshot_dir_path.is_dir():
             existing_names = {p.name for p in snapshot_dir_path.iterdir()}
         elif snapshot_dir_path.exists():
-            raise AssertionError('snapshot exists but is not a directory: {}'.format(snapshot_dir_path))
+            raise AssertionError('snapshot exists but is not a directory: {}'.format(shorten_path(snapshot_dir_path)))
         else:
             existing_names = set()
 
@@ -155,7 +181,7 @@ class Snapshot(object):
             self._snapshots_to_delete.extend(snapshot_dir_path.joinpath(name) for name in sorted(removed_names))
         else:
             if added_names or removed_names:
-                message_lines = ['Values do not match snapshots in {}'.format(snapshot_dir_path)]
+                message_lines = ['Values do not match snapshots in {}'.format(shorten_path(snapshot_dir_path))]
                 if added_names:
                     message_lines.append("  Values without snapshots:")
                     message_lines.extend('    ' + s for s in added_names)
@@ -167,4 +193,14 @@ class Snapshot(object):
 
         # Call assert_match to add, update, or assert equality for all snapshot files in the directory.
         for name, value in values_by_filename.items():
-            self.assert_match(value, '{}/{}'.format(snapshot_dir_name, name))
+            self.assert_match(value, snapshot_dir_path.joinpath(name))
+
+
+def shorten_path(path):
+    """
+    Returns the path relative to the current working directory is possible. Otherwise return the path unchanged.
+    """
+    try:
+        return path.relative_to(os.getcwd())
+    except ValueError:
+        return path
