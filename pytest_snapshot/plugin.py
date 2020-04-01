@@ -99,7 +99,8 @@ class Snapshot(object):
             snapshot_path = self.snapshot_dir.joinpath(snapshot_name)
 
         if self.snapshot_dir not in snapshot_path.parents:
-            raise AssertionError('Snapshot path {} is not in {}'.format(shorten_path(snapshot_path), shorten_path(self.snapshot_dir)))
+            raise AssertionError('Snapshot path {} is not in {}'.format(
+                shorten_path(snapshot_path), shorten_path(self.snapshot_dir)))
 
         return snapshot_path
 
@@ -151,7 +152,8 @@ class Snapshot(object):
                     raise AssertionError(snapshot_diff_msg)
             else:
                 raise AssertionError(
-                    "snapshot {} doesn't exist. (run pytest with --snapshot-update to create it)".format(shorten_path(snapshot_path)))
+                    "snapshot {} doesn't exist. (run pytest with --snapshot-update to create it)".format(
+                        shorten_path(snapshot_path)))
 
     def assert_match_dir(self, values_by_filename, snapshot_dir_name):
         """
