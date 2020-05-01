@@ -10,37 +10,6 @@ def basic_case_dir(testdir):
     return case_dir
 
 
-def test_assert_match_without_setting_snapshot_dir(testdir, basic_case_dir):
-    testdir.makepyfile("""
-        def test_sth(snapshot):
-            snapshot.assert_match(u'the value of snapshot1.txt', 'snapshot1.txt')
-    """)
-    result = testdir.runpytest('-v')
-    result.stdout.fnmatch_lines([
-        '*::test_sth FAILED*',
-        "E* AssertionError: snapshot.snapshot_dir was not set.",
-    ])
-    assert result.ret == 1
-
-
-def test_assert_match_auto_setting_snapshot_dir(testdir, basic_case_dir):
-    """
-    Test that when using paths as snapshot names,
-    if the snapshot_dir is not already set, it is set to the snapshot's parent.
-    """
-    testdir.makepyfile("""
-        try:
-            from pathlib import Path
-        except ImportError:
-            from pathlib2 import Path
-
-        def test_sth(snapshot):
-            snapshot.assert_match(u'the value of snapshot1.txt', Path('case_dir/snapshot1.txt'))
-            assert snapshot.snapshot_dir == Path('case_dir').absolute()
-    """)
-    assert_pytest_passes(testdir)
-
-
 def test_assert_match_with_external_snapshot_path(testdir, basic_case_dir):
     testdir.makepyfile("""
         try:
@@ -180,6 +149,27 @@ def test_assert_match_create_new_snapshot(testdir, basic_case_dir):
         'E*     sub_dir*new_snapshot1.txt',
     ])
     assert result.ret == 1
+
+    assert_pytest_passes(testdir)  # assert that snapshot update worked
+
+
+def test_assert_match_create_new_snapshot_in_default_dir(testdir):
+    testdir.makepyfile("""
+        def test_sth(snapshot):
+            snapshot.assert_match(u'the value of new_snapshot1.txt', 'sub_dir/new_snapshot1.txt')
+    """)
+    result = testdir.runpytest('-v', '--snapshot-update')
+    result.stdout.fnmatch_lines([
+        '*::test_sth PASSED*',
+        '*::test_sth ERROR*',
+        "E* Snapshot directory was modified: snapshots?test_assert_match_create_new_snapshot_in_default_dir?test_sth",
+        'E*   Created snapshots:',
+        'E*     sub_dir?new_snapshot1.txt',
+    ])
+    assert result.ret == 1
+    assert testdir.tmpdir.join(
+        'snapshots/test_assert_match_create_new_snapshot_in_default_dir/test_sth/sub_dir/new_snapshot1.txt'
+    ).read_text('utf-8') == u'the value of new_snapshot1.txt'
 
     assert_pytest_passes(testdir)  # assert that snapshot update worked
 
