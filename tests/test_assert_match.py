@@ -24,7 +24,7 @@ def test_assert_match_with_external_snapshot_path(testdir, basic_case_dir):
     result = testdir.runpytest('-v')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        "E* AssertionError: Snapshot path not_case_dir*snapshot1.txt is not in case_dir",
+        "E* AssertionError: Snapshot path not_case_dir?snapshot1.txt is not in case_dir",
     ])
     assert result.ret == 1
 
@@ -48,7 +48,7 @@ def test_assert_match_failure(testdir, basic_case_dir):
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
         ">* raise AssertionError(snapshot_diff_msg)",
-        'E* AssertionError: value does not match the expected value in snapshot case_dir*snapshot1.txt',
+        'E* AssertionError: value does not match the expected value in snapshot case_dir?snapshot1.txt',
         "E* assert * == *",
         "E* - the value of snapshot1.txt",
         "E* + the INCORRECT value of snapshot1.txt",
@@ -66,7 +66,7 @@ def test_assert_match_missing_snapshot(testdir, basic_case_dir):
     result = testdir.runpytest('-v')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        "E* snapshot case_dir*snapshot_that_doesnt_exist.txt doesn't exist. "
+        "E* snapshot case_dir?snapshot_that_doesnt_exist.txt doesn't exist. "
         "(run pytest with --snapshot-update to create it)",
     ])
     assert result.ret == 1
@@ -146,7 +146,7 @@ def test_assert_match_create_new_snapshot(testdir, basic_case_dir):
         '*::test_sth ERROR*',
         "E* Snapshot directory was modified: case_dir",
         'E*   Created snapshots:',
-        'E*     sub_dir*new_snapshot1.txt',
+        'E*     sub_dir?new_snapshot1.txt',
     ])
     assert result.ret == 1
 
@@ -184,6 +184,6 @@ def test_assert_match_existing_snapshot_is_not_file(testdir, basic_case_dir):
     result = testdir.runpytest('-v', '--snapshot-update')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        "E* AssertionError: snapshot exists but is not a file: case_dir*directory1",
+        "E* AssertionError: snapshot exists but is not a file: case_dir?directory1",
     ])
     assert result.ret == 1
