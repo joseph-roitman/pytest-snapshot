@@ -25,6 +25,7 @@ setup(
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
     install_requires=[
         'packaging',
+        'pathlib2>=2.2.0;python_version<"3.6"',  # identical to pytest's setup.py
         'pytest>=3.0.0',
         'typing',
     ],
