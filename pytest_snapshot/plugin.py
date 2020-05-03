@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
+import re
+import sys
 
 import pytest
 from packaging import version
@@ -9,6 +11,16 @@ try:
     from pathlib import Path
 except ImportError:
     from pathlib2 import Path
+
+PARAMETRIZED_TEST_REGEX = re.compile(r'^.*?\[(.*)\]$')
+
+# Taken from six.
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    text_type = str
+else:
+    text_type = unicode  # noqa: F821
 
 
 def pytest_addoption(parser):
@@ -27,8 +39,11 @@ def pytest_addoption(parser):
 
 @pytest.fixture
 def snapshot(request):
+    default_snapshot_dir = get_default_snapshot_dir(request.node)
+
     with Snapshot(request.config.option.snapshot_update,
-                  request.config.option.allow_snapshot_deletion) as snapshot:
+                  request.config.option.allow_snapshot_deletion,
+                  default_snapshot_dir) as snapshot:
         yield snapshot
 
 
@@ -40,12 +55,13 @@ class Snapshot(object):
     _snapshots_to_delete = None  # type: List[Path]
     _snapshot_dir = None  # type: Optional[Path]
 
-    def __init__(self, snapshot_update, allow_snapshot_deletion):
+    def __init__(self, snapshot_update, allow_snapshot_deletion, snapshot_dir):
         self._snapshot_update = snapshot_update
         self._allow_snapshot_deletion = allow_snapshot_deletion
         self._created_snapshots = []
         self._updated_snapshots = []
         self._snapshots_to_delete = []
+        self.snapshot_dir = snapshot_dir
 
     def __enter__(self):
         return self
@@ -78,8 +94,6 @@ class Snapshot(object):
 
     @property
     def snapshot_dir(self):
-        if self._snapshot_dir is None:
-            raise AssertionError('snapshot.snapshot_dir was not set.')
         return self._snapshot_dir
 
     @snapshot_dir.setter
@@ -116,6 +130,9 @@ class Snapshot(object):
         :type value: str
         :type snapshot_name: str or Path
         """
+        if not isinstance(value, text_type):
+            raise TypeError('value must be {}'.format(text_type.__name__))
+
         snapshot_path = self._snapshot_path(snapshot_name)
 
         if snapshot_path.is_file():
@@ -206,3 +223,36 @@ def shorten_path(path):
         return path.relative_to(os.getcwd())
     except ValueError:
         return path
+
+
+def get_default_snapshot_dir(node):
+    """
+    Returns the default snapshot directory for the pytest test.
+
+    :type node: _pytest.python.Function
+    :rtype: Path
+    """
+    test_module_dir = node.fspath.dirpath()
+    test_module = node.fspath.purebasename
+    if node.originalname is None:
+        test_name = node.name
+        parametrize_name = None
+    else:
+        test_name = node.originalname
+        parametrize_match = PARAMETRIZED_TEST_REGEX.match(node.name)
+        assert parametrize_match is not None, 'Expected request.node.name to be of format TEST_FUNCTION[PARAMS]'
+        parametrize_name = PARAMETRIZED_TEST_REGEX.match(node.name).group(1)
+        parametrize_name = get_valid_filename(parametrize_name)
+    default_snapshot_dir = test_module_dir.join('snapshots', test_module, test_name)
+    if parametrize_name:
+        default_snapshot_dir = default_snapshot_dir.join(parametrize_name)
+    return Path(str(default_snapshot_dir))
+
+
+def get_valid_filename(s):
+    """
+    Return the given string converted to a string that can be used for a clean filename.
+    Taken from https://github.com/django/django/blob/master/django/utils/text.py
+    """
+    s = str(s).strip().replace(' ', '_')
+    return re.sub(r'(?u)[^-\w.]', '', s)
