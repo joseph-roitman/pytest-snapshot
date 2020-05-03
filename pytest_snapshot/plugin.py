@@ -11,7 +11,7 @@ try:
 except ImportError:
     from pathlib2 import Path
 
-PARAMETRIZED_TEST_REGEX = re.compile('^.*\[(.*)\]$')
+PARAMETRIZED_TEST_REGEX = re.compile(r'^.*?\[(.*)\]$')
 
 def pytest_addoption(parser):
     group = parser.getgroup('snapshot')
@@ -229,7 +229,17 @@ def get_default_snapshot_dir(node):
         parametrize_match = PARAMETRIZED_TEST_REGEX.match(node.name)
         assert parametrize_match is not None, 'Expected request.node.name to be of format TEST_FUNCTION[PARAMS]'
         parametrize_name = PARAMETRIZED_TEST_REGEX.match(node.name).group(1)
+        parametrize_name = get_valid_filename(parametrize_name)
     default_snapshot_dir = test_module_dir.join('snapshots', test_module, test_name)
     if parametrize_name:
         default_snapshot_dir = default_snapshot_dir.join(parametrize_name)
     return Path(str(default_snapshot_dir))
+
+
+def get_valid_filename(s):
+    """
+    Return the given string converted to a string that can be used for a clean filename.
+    Taken from https://github.com/django/django/blob/master/django/utils/text.py
+    """
+    s = str(s).strip().replace(' ', '_')
+    return re.sub(r'(?u)[^-\w.]', '', s)
