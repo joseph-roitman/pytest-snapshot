@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import re
+import sys
 
 import pytest
 from packaging import version
@@ -12,6 +13,15 @@ except ImportError:
     from pathlib2 import Path
 
 PARAMETRIZED_TEST_REGEX = re.compile(r'^.*?\[(.*)\]$')
+
+# Taken from six.
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    text_type = str
+else:
+    text_type = unicode
+
 
 def pytest_addoption(parser):
     group = parser.getgroup('snapshot')
@@ -120,6 +130,9 @@ class Snapshot(object):
         :type value: str
         :type snapshot_name: str or Path
         """
+        if not isinstance(value, text_type):
+            raise TypeError('value must be {}'.format(text_type.__name__))
+
         snapshot_path = self._snapshot_path(snapshot_name)
 
         if snapshot_path.is_file():
