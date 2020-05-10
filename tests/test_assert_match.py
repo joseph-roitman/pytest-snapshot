@@ -1,5 +1,6 @@
 import pytest
 
+from pytest_snapshot.plugin import text_type
 from tests.utils import assert_pytest_passes
 
 
@@ -53,6 +54,20 @@ def test_assert_match_failure(testdir, basic_case_dir):
         "E* - the value of snapshot1.txt",
         "E* + the INCORRECT value of snapshot1.txt",
         "E* ?    ++++++++++",
+    ])
+    assert result.ret == 1
+
+
+def test_assert_match_invalid_type(testdir, basic_case_dir):
+    testdir.makepyfile("""
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            snapshot.assert_match(b'incorrect typed obj', 'snapshot1.txt')
+    """)
+    result = testdir.runpytest('-v')
+    result.stdout.fnmatch_lines([
+        '*::test_sth FAILED*',
+        'E* TypeError: value must be {}'.format(text_type.__name__),
     ])
     assert result.ret == 1
 
@@ -132,6 +147,34 @@ def test_assert_match_update_existing_snapshot(testdir, basic_case_dir, case_dir
     assert result.ret == 1
 
     assert_pytest_passes(testdir)  # assert that snapshot update worked
+
+
+def test_assert_match_update_existing_snapshot_and_exception_in_test(testdir, basic_case_dir):
+    """
+    Tests that `Snapshot.assert_match` works when updating an existing snapshot and then the test function fails.
+    In this case, both the snapshot update error and the test function error are printed out.
+    """
+    testdir.makepyfile("""
+        try:
+            from pathlib import Path
+        except ImportError:
+            from pathlib2 import Path
+
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            snapshot.assert_match(u'the NEW value of snapshot1.txt', 'snapshot1.txt')
+            assert False
+    """)
+    result = testdir.runpytest('-v', '--snapshot-update')
+    result.stdout.fnmatch_lines([
+        '*::test_sth FAILED*',
+        '*::test_sth ERROR*',
+        "E* AssertionError: Snapshot directory was modified: case_dir",
+        'E*   Updated snapshots:',
+        'E*     snapshot1.txt',
+        'E* assert False',
+    ])
+    assert result.ret == 1
 
 
 def test_assert_match_create_new_snapshot(testdir, basic_case_dir):

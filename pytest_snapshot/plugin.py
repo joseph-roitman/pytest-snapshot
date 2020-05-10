@@ -67,8 +67,6 @@ class Snapshot(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        if exc_type is not None:
-            return False
         if self._created_snapshots or self._updated_snapshots or self._snapshots_to_delete:
             message_lines = ['Snapshot directory was modified: {}'.format(shorten_path(self.snapshot_dir))]
             if self._created_snapshots:
@@ -109,8 +107,6 @@ class Snapshot(object):
         """
         if isinstance(snapshot_name, Path):
             snapshot_path = snapshot_name.absolute()
-            if self._snapshot_dir is None:
-                self.snapshot_dir = snapshot_path.parent
         else:
             snapshot_path = self.snapshot_dir.joinpath(snapshot_name)
 
