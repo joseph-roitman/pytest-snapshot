@@ -27,7 +27,7 @@ setup(
         'packaging',
         'pathlib2>=2.2.0;python_version<"3.6"',  # identical to pytest's setup.py
         'pytest>=3.0.0',
-        'typing',
+        'typing;python_version<"3.5"',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',

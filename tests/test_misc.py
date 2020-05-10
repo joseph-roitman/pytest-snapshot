@@ -1,4 +1,10 @@
+from pytest_snapshot.plugin import shorten_path
 from tests.utils import assert_pytest_passes
+
+try:
+    from pathlib import Path
+except ImportError:
+    from pathlib2 import Path
 
 
 def test_help_message(testdir):
@@ -42,3 +48,12 @@ def test_default_snapshot_dir_with_parametrize(testdir):
         '*::test_sth?b? PASSED*',
     ])
     assert result.ret == 0
+
+
+def test_shorten_path_in_cwd():
+    assert shorten_path(Path('a/b').absolute()) == Path('a/b')
+
+
+def test_shorten_path_outside_cwd():
+    path_outside_cwd = Path().absolute().parent.joinpath('a/b')
+    assert shorten_path(path_outside_cwd) == path_outside_cwd
