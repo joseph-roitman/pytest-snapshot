@@ -105,7 +105,7 @@ In the second example, the developer would simply
 Snapshot testing can be used for expressions whose values are strings.
 For other types, you should first create a *human readable* textual representation of the value.
 For example, to snapshot test a *json-serializable* value, you could either convert it into json
-or preferably convert it into the more readable yaml format using `PyYaml`_:
+or preferably convert it into the more readable yaml format using `PyYAML`_:
 
 .. code-block:: python
 
