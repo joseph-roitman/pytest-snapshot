@@ -189,14 +189,14 @@ If in the future we change the tested function, we can quickly fix the test with
 Contributing
 ------------
 Contributions are very welcome. Before contributing, please discuss the change with me.
-I wish to keep this plugin flexible and not enforce any project layout on the users.
+I wish to keep this plugin flexible and not enforce any project layout on the user.
 
 Tests can be run with `tox`_, please ensure
 the coverage at least stays the same before you submit a pull request.
 
 License
 -------
-Distributed under the terms of the `MIT`_ license, "pytest-snapshot" is free and open source software
+Distributed under the terms of the `MIT`_ license, "pytest-snapshot" is free and open source software.
 
 
 Issues
@@ -223,4 +223,4 @@ Links
 .. _`PyPI`: https://pypi.org
 .. _`PyPy`: https://www.pypy.org/
 .. _`jest's snapshot testing`: https://jestjs.io/docs/en/snapshot-testing
-.. _`PyYaml`: https://pypi.org/project/PyYAML/
+.. _`PyYAML`: https://pypi.org/project/PyYAML/
