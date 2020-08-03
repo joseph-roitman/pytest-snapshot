@@ -230,7 +230,7 @@ def get_default_snapshot_dir(node):
     """
     test_module_dir = node.fspath.dirpath()
     test_module = node.fspath.purebasename
-    if node.originalname is None:
+    if '[' not in node.name:
         test_name = node.name
         parametrize_name = None
     else:
