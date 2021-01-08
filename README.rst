@@ -186,6 +186,21 @@ Now, we can run ``pytest --snapshot-update`` to create an ``output.yml`` snapsho
 If in the future we change the tested function, we can quickly fix the test with another ``pytest --snapshot-update``.
 
 
+Similar Packages
+----------------
+Another python package that can be used for snapshot testing is `snapshottest`_.
+While this package and snapshottest fulfill the same role, there are some differences.
+
+With pytest-snapshot:
+
+* Every snapshot is saved to a separate file.
+* The paths to snapshot files are fully customizable.
+* The serialization of objects to snapshots is fully customizable (the library does not serialize).
+
+This allows the user to organize snapshots in the most human-readable and logical place in their code repository.
+This is highly beneficial since snapshots will be viewed by users many times during development and code reviews.
+
+
 Contributing
 ------------
 Contributions are very welcome. Before contributing, please discuss the change with me.
@@ -193,6 +208,7 @@ I wish to keep this plugin flexible and not enforce any project layout on the us
 
 Tests can be run with `tox`_, please ensure
 the coverage at least stays the same before you submit a pull request.
+
 
 License
 -------
@@ -224,3 +240,4 @@ Links
 .. _`PyPy`: https://www.pypy.org/
 .. _`jest's snapshot testing`: https://jestjs.io/docs/en/snapshot-testing
 .. _`PyYAML`: https://pypi.org/project/PyYAML/
+.. _`snapshottest`: https://github.com/syrusakbary/snapshottest
