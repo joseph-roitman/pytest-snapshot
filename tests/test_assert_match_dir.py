@@ -7,8 +7,8 @@ from tests.utils import assert_pytest_passes
 def basic_case_dir(testdir):
     case_dir = testdir.mkdir('case_dir')
     dict_snapshot1 = case_dir.mkdir('dict_snapshot1')
-    dict_snapshot1.join('obj1.txt').write_text(u'the value of obj1.txt', 'ascii')
-    dict_snapshot1.join('obj2.txt').write_text(u'the value of obj2.txt', 'ascii')
+    dict_snapshot1.join('obj1.txt').write_text('the value of obj1.txt', 'ascii')
+    dict_snapshot1.join('obj2.txt').write_text('the value of obj2.txt', 'ascii')
     return case_dir
 
 
@@ -17,8 +17,8 @@ def test_assert_match_dir_success(testdir, basic_case_dir):
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
             snapshot.assert_match_dir({
-                'obj1.txt': u'the value of obj1.txt',
-                'obj2.txt': u'the value of obj2.txt',
+                'obj1.txt': 'the value of obj1.txt',
+                'obj2.txt': 'the value of obj2.txt',
             }, 'dict_snapshot1')
     """)
     assert_pytest_passes(testdir)
@@ -29,8 +29,8 @@ def test_assert_match_dir_failure(testdir, basic_case_dir):
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
             snapshot.assert_match_dir({
-                'obj1.txt': u'the value of obj1.txt',
-                'obj2.txt': u'the INCORRECT value of obj2.txt',
+                'obj1.txt': 'the value of obj1.txt',
+                'obj2.txt': 'the INCORRECT value of obj2.txt',
             }, 'dict_snapshot1')
     """)
     result = testdir.runpytest('-v')
@@ -51,9 +51,9 @@ def test_assert_match_dir_missing_snapshot(testdir, basic_case_dir):
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
             snapshot.assert_match_dir({
-                'obj1.txt': u'the value of obj1.txt',
-                'obj2.txt': u'the value of obj2.txt',
-                'new_obj.txt': u'the value of new_obj.txt',
+                'obj1.txt': 'the value of obj1.txt',
+                'obj2.txt': 'the value of obj2.txt',
+                'new_obj.txt': 'the value of new_obj.txt',
             }, 'dict_snapshot1')
     """)
     result = testdir.runpytest('-v')
@@ -72,7 +72,7 @@ def test_assert_match_dir_missing_value(testdir, basic_case_dir):
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
             snapshot.assert_match_dir({
-                'obj1.txt': u'the value of obj1.txt',
+                'obj1.txt': 'the value of obj1.txt',
             }, 'dict_snapshot1')
     """)
     result = testdir.runpytest('-v')
@@ -91,8 +91,8 @@ def test_assert_match_dir_update_existing_snapshot_no_change(testdir, basic_case
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
             snapshot.assert_match_dir({
-                'obj1.txt': u'the value of obj1.txt',
-                'obj2.txt': u'the value of obj2.txt',
+                'obj1.txt': 'the value of obj1.txt',
+                'obj2.txt': 'the value of obj2.txt',
             }, 'dict_snapshot1')
     """)
     result = testdir.runpytest('-v', '--snapshot-update')
@@ -135,8 +135,8 @@ def test_assert_match_dir_update_existing_snapshot(testdir, basic_case_dir, case
         def test_sth(snapshot):
             snapshot.snapshot_dir = {case_dir_repr}
             snapshot.assert_match_dir({{
-                'obj1.txt': u'the value of obj1.txt',
-                'obj2.txt': u'the NEW value of obj2.txt',
+                'obj1.txt': 'the value of obj1.txt',
+                'obj2.txt': 'the NEW value of obj2.txt',
             }}, {snapshot_name_repr})
     """.format(case_dir_repr=case_dir_repr, snapshot_name_repr=snapshot_name_repr))
     result = testdir.runpytest('-v', '--snapshot-update')
@@ -157,9 +157,9 @@ def test_assert_match_dir_create_new_snapshot_file(testdir, basic_case_dir):
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
             snapshot.assert_match_dir({
-                'obj1.txt': u'the value of obj1.txt',
-                'obj2.txt': u'the value of obj2.txt',
-                'new_obj.txt': u'the value of new_obj.txt',
+                'obj1.txt': 'the value of obj1.txt',
+                'obj2.txt': 'the value of obj2.txt',
+                'new_obj.txt': 'the value of new_obj.txt',
             }, 'dict_snapshot1')
     """)
     result = testdir.runpytest('-v', '--snapshot-update')
@@ -180,7 +180,7 @@ def test_assert_match_dir_delete_snapshot_file(testdir, basic_case_dir):
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
             snapshot.assert_match_dir({
-                'obj1.txt': u'the value of obj1.txt',
+                'obj1.txt': 'the value of obj1.txt',
             }, 'dict_snapshot1')
     """)
     result = testdir.runpytest('-v', '--snapshot-update')
@@ -211,7 +211,7 @@ def test_assert_match_dir_create_new_snapshot_dir(testdir, basic_case_dir):
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
             snapshot.assert_match_dir({
-                'obj1.txt': u'the value of obj1.txt',
+                'obj1.txt': 'the value of obj1.txt',
             }, 'new_dict_snapshot')
     """)
     result = testdir.runpytest('-v', '--snapshot-update')
@@ -228,7 +228,7 @@ def test_assert_match_dir_create_new_snapshot_dir(testdir, basic_case_dir):
 
 
 def test_assert_match_dir_existing_snapshot_is_not_dir(testdir, basic_case_dir):
-    basic_case_dir.join('file1').write_text(u'', 'ascii')
+    basic_case_dir.join('file1').write_text('', 'ascii')
     testdir.makepyfile("""
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'

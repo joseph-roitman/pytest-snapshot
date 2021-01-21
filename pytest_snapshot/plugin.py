@@ -1,26 +1,17 @@
-# -*- coding: utf-8 -*-
 import os
 import re
-import sys
 
 import pytest
+import _pytest.python
 from packaging import version
-from typing import Optional, List
+from typing import List, Dict, Union
 
 try:
     from pathlib import Path
 except ImportError:
     from pathlib2 import Path
 
-PARAMETRIZED_TEST_REGEX = re.compile(r'^.*?\[(.*)\]$')
-
-# Taken from six.
-PY3 = sys.version_info[0] == 3
-
-if PY3:
-    text_type = str
-else:
-    text_type = unicode  # noqa: F821
+PARAMETRIZED_TEST_REGEX = re.compile(r'^.*?\[(.*)]$')
 
 
 def pytest_addoption(parser):
@@ -53,9 +44,9 @@ class Snapshot(object):
     _created_snapshots = None  # type: List[Path]
     _updated_snapshots = None  # type: List[Path]
     _snapshots_to_delete = None  # type: List[Path]
-    _snapshot_dir = None  # type: Optional[Path]
+    _snapshot_dir = None  # type: Path
 
-    def __init__(self, snapshot_update, allow_snapshot_deletion, snapshot_dir):
+    def __init__(self, snapshot_update: bool, allow_snapshot_deletion: bool, snapshot_dir: Path):
         self._snapshot_update = snapshot_update
         self._allow_snapshot_deletion = allow_snapshot_deletion
         self._created_snapshots = []
@@ -98,12 +89,9 @@ class Snapshot(object):
     def snapshot_dir(self, value):
         self._snapshot_dir = Path(value).absolute()
 
-    def _snapshot_path(self, snapshot_name):
+    def _snapshot_path(self, snapshot_name: Union[str, Path]) -> Path:
         """
         Returns the absolute path to the given snapshot.
-
-        :type snapshot_name: str or Path
-        :rtype: Path
         """
         if isinstance(snapshot_name, Path):
             snapshot_path = snapshot_name.absolute()
@@ -116,18 +104,15 @@ class Snapshot(object):
 
         return snapshot_path
 
-    def assert_match(self, value, snapshot_name):
+    def assert_match(self, value: str, snapshot_name: Union[str, Path]):
         """
         Asserts that ``value`` equals the current value of the snapshot with the given ``snapshot_name``.
 
         If pytest was run with the --snapshot-update flag, the snapshot will instead be updated to ``value``.
         The test will fail if the value changed.
-
-        :type value: str
-        :type snapshot_name: str or Path
         """
-        if not isinstance(value, text_type):
-            raise TypeError('value must be {}'.format(text_type.__name__))
+        if not isinstance(value, str):
+            raise TypeError('value must be str')
 
         snapshot_path = self._snapshot_path(snapshot_name)
 
@@ -170,15 +155,12 @@ class Snapshot(object):
                     "snapshot {} doesn't exist. (run pytest with --snapshot-update to create it)".format(
                         shorten_path(snapshot_path)))
 
-    def assert_match_dir(self, values_by_filename, snapshot_dir_name):
+    def assert_match_dir(self, values_by_filename: Dict[str, str], snapshot_dir_name: Union[str, Path]):
         """
         Asserts that the values in values_by_filename equal the current values in the given snapshot directory.
 
         If pytest was run with the --snapshot-update flag, the snapshots will instead be updated.
         The test will fail there were any changes to the snapshots.
-
-        :type values_by_filename: dict[str, str]
-        :type snapshot_dir_name: str or Path
         """
         snapshot_dir_path = self._snapshot_path(snapshot_dir_name)
 
@@ -211,7 +193,7 @@ class Snapshot(object):
             self.assert_match(value, snapshot_dir_path.joinpath(name))
 
 
-def shorten_path(path):
+def shorten_path(path: Path) -> Path:
     """
     Returns the path relative to the current working directory is possible. Otherwise return the path unchanged.
     """
@@ -221,12 +203,9 @@ def shorten_path(path):
         return path
 
 
-def get_default_snapshot_dir(node):
+def get_default_snapshot_dir(node: _pytest.python.Function) -> Path:
     """
     Returns the default snapshot directory for the pytest test.
-
-    :type node: _pytest.python.Function
-    :rtype: Path
     """
     test_module_dir = node.fspath.dirpath()
     test_module = node.fspath.purebasename
@@ -245,7 +224,7 @@ def get_default_snapshot_dir(node):
     return Path(str(default_snapshot_dir))
 
 
-def get_valid_filename(s):
+def get_valid_filename(s: str) -> str:
     """
     Return the given string converted to a string that can be used for a clean filename.
     Taken from https://github.com/django/django/blob/master/django/utils/text.py

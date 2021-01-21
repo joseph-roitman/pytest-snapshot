@@ -22,12 +22,11 @@ setup(
     description='A plugin to enable snapshot testing with pytest.',
     long_description=read('README.rst'),
     packages=['pytest_snapshot'],
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*',
+    python_requires='>=3.5',
     install_requires=[
         'packaging',
         'pathlib2>=2.2.0;python_version<"3.6"',  # identical to pytest's setup.py
         'pytest>=3.0.0',
-        'typing;python_version<"3.5"',
     ],
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -35,8 +34,6 @@ setup(
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Testing',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
