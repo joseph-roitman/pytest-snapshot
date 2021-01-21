@@ -6,7 +6,7 @@ from tests.utils import assert_pytest_passes
 @pytest.fixture
 def basic_case_dir(testdir):
     case_dir = testdir.mkdir('case_dir')
-    case_dir.join('snapshot1.txt').write_text('the value of snapshot1.txt', 'ascii')
+    case_dir.join('snapshot1.txt').write_text('the valuÉ of snapshot1.txt', 'utf-8')
     return case_dir
 
 
@@ -30,7 +30,7 @@ def test_assert_match_success(testdir, basic_case_dir):
     testdir.makepyfile("""
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
-            snapshot.assert_match('the value of snapshot1.txt', 'snapshot1.txt')
+            snapshot.assert_match('the valuÉ of snapshot1.txt', 'snapshot1.txt')
     """)
     assert_pytest_passes(testdir)
 
@@ -47,9 +47,10 @@ def test_assert_match_failure(testdir, basic_case_dir):
         ">* raise AssertionError(snapshot_diff_msg)",
         'E* AssertionError: value does not match the expected value in snapshot case_dir?snapshot1.txt',
         "E* assert * == *",
-        "E* - the value of snapshot1.txt",
+        "E* - the valuÉ of snapshot1.txt",
+        "E* ?         ^",
         "E* + the INCORRECT value of snapshot1.txt",
-        "E* ?    ++++++++++",
+        "E* ?    ++++++++++     ^",
     ])
     assert result.ret == 1
 
@@ -87,7 +88,7 @@ def test_assert_match_update_existing_snapshot_no_change(testdir, basic_case_dir
     testdir.makepyfile("""
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
-            snapshot.assert_match('the value of snapshot1.txt', 'snapshot1.txt')
+            snapshot.assert_match('the valuÉ of snapshot1.txt', 'snapshot1.txt')
     """)
     result = testdir.runpytest('-v', '--snapshot-update')
     result.stdout.fnmatch_lines([
