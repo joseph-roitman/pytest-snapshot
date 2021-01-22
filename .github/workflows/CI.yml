@@ -10,7 +10,6 @@ on:
     branches: [ master ]
   schedule:
     - cron: '0 4 * * *'
-
 jobs:
   tests:
     name: Python ${{ matrix.python-version }}
@@ -38,3 +37,4 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         directory: coverage-reports
+        name: ${{ matrix.python-version }}
