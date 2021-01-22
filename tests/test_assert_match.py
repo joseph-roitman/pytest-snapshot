@@ -12,10 +12,7 @@ def basic_case_dir(testdir):
 
 def test_assert_match_with_external_snapshot_path(testdir, basic_case_dir):
     testdir.makepyfile("""
-        try:
-            from pathlib import Path
-        except ImportError:
-            from pathlib2 import Path
+        from pathlib import Path
 
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
@@ -126,10 +123,7 @@ def test_assert_match_update_existing_snapshot(testdir, basic_case_dir, case_dir
     Also tests that `Snapshot` supports absolute/relative str/Path snapshot directories and snapshot paths.
     """
     testdir.makepyfile("""
-        try:
-            from pathlib import Path
-        except ImportError:
-            from pathlib2 import Path
+        from pathlib import Path
 
         def test_sth(snapshot):
             snapshot.snapshot_dir = {case_dir_repr}
@@ -154,10 +148,7 @@ def test_assert_match_update_existing_snapshot_and_exception_in_test(testdir, ba
     In this case, both the snapshot update error and the test function error are printed out.
     """
     testdir.makepyfile("""
-        try:
-            from pathlib import Path
-        except ImportError:
-            from pathlib2 import Path
+        from pathlib import Path
 
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'

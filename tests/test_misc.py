@@ -1,10 +1,7 @@
 from pytest_snapshot.plugin import shorten_path
 from tests.utils import assert_pytest_passes
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib import Path
 
 
 def test_help_message(testdir):
@@ -17,10 +14,7 @@ def test_help_message(testdir):
 
 def test_default_snapshot_dir_without_parametrize(testdir):
     testdir.makepyfile("""
-        try:
-            from pathlib import Path
-        except ImportError:
-            from pathlib2 import Path
+        from pathlib import Path
 
         def test_sth(snapshot):
             assert snapshot.snapshot_dir == \
@@ -32,10 +26,7 @@ def test_default_snapshot_dir_without_parametrize(testdir):
 def test_default_snapshot_dir_with_parametrize(testdir):
     testdir.makepyfile("""
         import pytest
-        try:
-            from pathlib import Path
-        except ImportError:
-            from pathlib2 import Path
+        from pathlib import Path
 
         @pytest.mark.parametrize('param', ['a', 'b'])
         def test_sth(snapshot, param):

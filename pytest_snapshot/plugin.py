@@ -6,10 +6,7 @@ import _pytest.python
 from packaging import version
 from typing import List, Dict, Union
 
-try:
-    from pathlib import Path
-except ImportError:
-    from pathlib2 import Path
+from pathlib import Path
 
 PARAMETRIZED_TEST_REGEX = re.compile(r'^.*?\[(.*)]$')
 

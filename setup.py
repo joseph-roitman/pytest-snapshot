@@ -25,7 +25,6 @@ setup(
     python_requires='>=3.5',
     install_requires=[
         'packaging',
-        'pathlib2>=2.2.0;python_version<"3.6"',  # identical to pytest's setup.py
         'pytest>=3.0.0',
     ],
     classifiers=[
