@@ -43,13 +43,16 @@ class Snapshot(object):
     _snapshots_to_delete = None  # type: List[Path]
     _snapshot_dir = None  # type: Path
 
-    def __init__(self, snapshot_update: bool, allow_snapshot_deletion: bool, snapshot_dir: Path):
+    def __init__(
+            self, snapshot_update: bool, allow_snapshot_deletion: bool, snapshot_dir: Path, snapshot_encoding: str
+    ):
         self._snapshot_update = snapshot_update
         self._allow_snapshot_deletion = allow_snapshot_deletion
         self._created_snapshots = []
         self._updated_snapshots = []
         self._snapshots_to_delete = []
         self.snapshot_dir = snapshot_dir
+        self.snapshot_encoding = snapshot_encoding
 
     def __enter__(self):
         return self
@@ -114,7 +117,7 @@ class Snapshot(object):
         snapshot_path = self._snapshot_path(snapshot_name)
 
         if snapshot_path.is_file():
-            expected_value = snapshot_path.read_text('utf-8')
+            expected_value = snapshot_path.read_text(encoding=self.snapshot_encoding)
         elif snapshot_path.exists():
             raise AssertionError('snapshot exists but is not a file: {}'.format(shorten_path(snapshot_path)))
         else:
@@ -124,10 +127,10 @@ class Snapshot(object):
             snapshot_path.parent.mkdir(parents=True, exist_ok=True)
             if expected_value is not None:
                 if expected_value != value:
-                    snapshot_path.write_text(value, 'utf-8')
+                    snapshot_path.write_text(value, encoding=self.snapshot_encoding)
                     self._updated_snapshots.append(snapshot_path)
             else:
-                snapshot_path.write_text(value, 'utf-8')
+                snapshot_path.write_text(value, encoding=self.snapshot_encoding)
                 self._created_snapshots.append(snapshot_path)
         else:
             if expected_value is not None:
