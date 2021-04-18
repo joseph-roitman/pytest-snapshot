@@ -35,7 +35,16 @@ def snapshot(request):
         yield snapshot
 
 
-class Snapshot(object):
+def _assert_equal(value, expected_value):
+    # pytest diffs before version 5.4.0 required expected to be on the left hand side.
+    expected_on_right = version.parse(pytest.__version__) >= version.parse("5.4.0")
+    if expected_on_right:
+        assert value == expected_value
+    else:
+        assert expected_value == value
+
+
+class Snapshot:
     _snapshot_update = None  # type: bool
     _allow_snapshot_deletion = None  # type: bool
     _created_snapshots = None  # type: List[Path]
@@ -101,43 +110,55 @@ class Snapshot(object):
 
         return snapshot_path
 
-    def assert_match(self, value: str, snapshot_name: Union[str, Path]):
+    def _get_compare_encode_decode(self, value: Union[str, bytes]):
+        """
+        Returns a 3-tuple of a compare function, an encoding function and a decoding function.
+
+        * The compare function should compare the object to the value of its snapshot,
+          raising an AssertionError with a useful error message if they are different.
+        * The encoding function should encode the value into bytes for saving to a snapshot file.
+        * The decoding function should decode bytes from a snapshot file into a object.
+        """
+        if isinstance(value, str):
+            return _assert_equal, str.encode, bytes.decode
+        elif isinstance(value, bytes):
+            return _assert_equal, lambda x: x, lambda x: x
+        else:
+            raise TypeError('value must be str or bytes')
+
+    def assert_match(self, value: Union[str, bytes], snapshot_name: Union[str, Path]):
         """
         Asserts that ``value`` equals the current value of the snapshot with the given ``snapshot_name``.
 
         If pytest was run with the --snapshot-update flag, the snapshot will instead be updated to ``value``.
         The test will fail if the value changed.
         """
-        if not isinstance(value, str):
-            raise TypeError('value must be str')
-
+        compare, encode, decode = self._get_compare_encode_decode(value)
         snapshot_path = self._snapshot_path(snapshot_name)
 
         if snapshot_path.is_file():
-            expected_value = snapshot_path.read_text('utf-8')
+            encoded_expected_value = snapshot_path.read_bytes()
+            expected_value = decode(encoded_expected_value)
         elif snapshot_path.exists():
             raise AssertionError('snapshot exists but is not a file: {}'.format(shorten_path(snapshot_path)))
         else:
+            encoded_expected_value = None
             expected_value = None
 
         if self._snapshot_update:
+            encoded_value = encode(value)
             snapshot_path.parent.mkdir(parents=True, exist_ok=True)
-            if expected_value is not None:
-                if expected_value != value:
-                    snapshot_path.write_text(value, 'utf-8')
+            if encoded_expected_value is not None:
+                if encoded_expected_value != encoded_value:
+                    snapshot_path.write_bytes(encoded_value)
                     self._updated_snapshots.append(snapshot_path)
             else:
-                snapshot_path.write_text(value, 'utf-8')
+                snapshot_path.write_bytes(encoded_value)
                 self._created_snapshots.append(snapshot_path)
         else:
-            if expected_value is not None:
-                # pytest diffs before version 5.4.0 required expected to be on the left hand side.
-                expected_on_right = version.parse(pytest.__version__) >= version.parse("5.4.0")
+            if encoded_expected_value is not None:
                 try:
-                    if expected_on_right:
-                        assert value == expected_value
-                    else:
-                        assert expected_value == value
+                    compare(value, expected_value)
                 except AssertionError as e:
                     snapshot_diff_msg = str(e)
                 else:
@@ -152,7 +173,7 @@ class Snapshot(object):
                     "snapshot {} doesn't exist. (run pytest with --snapshot-update to create it)".format(
                         shorten_path(snapshot_path)))
 
-    def assert_match_dir(self, values_by_filename: Dict[str, str], snapshot_dir_name: Union[str, Path]):
+    def assert_match_dir(self, values_by_filename: Dict[str, Union[str, bytes]], snapshot_dir_name: Union[str, Path]):
         """
         Asserts that the values in values_by_filename equal the current values in the given snapshot directory.
 
