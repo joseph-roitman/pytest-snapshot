@@ -51,7 +51,7 @@ Features
 Requirements
 ------------
 
-* Python 2.7 or 3.5+ or `PyPy`_
+* Python 3.5+ or `PyPy`_
 * `pytest`_ 3.0+
 
 
