@@ -26,11 +26,20 @@ def test_assert_match_with_external_snapshot_path(testdir, basic_case_dir):
     assert result.ret == 1
 
 
-def test_assert_match_success(testdir, basic_case_dir):
+def test_assert_match_success_string(testdir, basic_case_dir):
     testdir.makepyfile("""
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
             snapshot.assert_match('the valuÉ of snapshot1.txt', 'snapshot1.txt')
+    """)
+    assert_pytest_passes(testdir)
+
+
+def test_assert_match_success_bytes(testdir, basic_case_dir):
+    testdir.makepyfile(r"""
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            snapshot.assert_match(b'the valu\xc3\x89 of snapshot1.txt', 'snapshot1.txt')
     """)
     assert_pytest_passes(testdir)
 
