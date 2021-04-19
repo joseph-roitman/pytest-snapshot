@@ -26,7 +26,7 @@ def test_assert_match_with_external_snapshot_path(testdir, basic_case_dir):
     assert result.ret == 1
 
 
-def test_assert_match_success(testdir, basic_case_dir):
+def test_assert_match_success_string(testdir, basic_case_dir):
     testdir.makepyfile("""
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
@@ -35,7 +35,16 @@ def test_assert_match_success(testdir, basic_case_dir):
     assert_pytest_passes(testdir)
 
 
-def test_assert_match_failure(testdir, basic_case_dir):
+def test_assert_match_success_bytes(testdir, basic_case_dir):
+    testdir.makepyfile(r"""
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            snapshot.assert_match(b'the valu\xc3\x89 of snapshot1.txt', 'snapshot1.txt')
+    """)
+    assert_pytest_passes(testdir)
+
+
+def test_assert_match_failure_string(testdir, basic_case_dir):
     testdir.makepyfile("""
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
@@ -55,16 +64,36 @@ def test_assert_match_failure(testdir, basic_case_dir):
     assert result.ret == 1
 
 
+def test_assert_match_failure_bytes(testdir, basic_case_dir):
+    testdir.makepyfile("""
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            snapshot.assert_match(b'the INCORRECT value of snapshot1.txt', 'snapshot1.txt')
+    """)
+    result = testdir.runpytest('-v')
+    result.stdout.fnmatch_lines([
+        r'*::test_sth FAILED*',
+        r">* raise AssertionError(snapshot_diff_msg)",
+        r'E* AssertionError: value does not match the expected value in snapshot case_dir?snapshot1.txt',
+        r"E* assert * == *",
+        r"E* At index 4 diff: * != *",
+        r"E* Full diff:",
+        r"E* - b'the valu\xc3\x89 of snapshot1.txt'",
+        r"E* + b'the INCORRECT value of snapshot1.txt'",
+    ])
+    assert result.ret == 1
+
+
 def test_assert_match_invalid_type(testdir, basic_case_dir):
     testdir.makepyfile("""
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
-            snapshot.assert_match(b'incorrect typed obj', 'snapshot1.txt')
+            snapshot.assert_match(123, 'snapshot1.txt')
     """)
     result = testdir.runpytest('-v')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        'E* TypeError: value must be str',
+        'E* TypeError: value must be str or bytes',
     ])
     assert result.ret == 1
 
