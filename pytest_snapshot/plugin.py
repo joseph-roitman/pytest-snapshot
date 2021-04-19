@@ -35,7 +35,7 @@ def snapshot(request):
         yield snapshot
 
 
-def _assert_equal(value, expected_value):
+def _assert_equal(value, expected_value) -> None:
     # pytest diffs before version 5.4.0 required expected to be on the left hand side.
     expected_on_right = version.parse(pytest.__version__) >= version.parse("5.4.0")
     if expected_on_right:
@@ -131,7 +131,7 @@ class Snapshot:
         Asserts that ``value`` equals the current value of the snapshot with the given ``snapshot_name``.
 
         If pytest was run with the --snapshot-update flag, the snapshot will instead be updated to ``value``.
-        The test will fail if the value changed.
+        The test will fail if there were any changes to the snapshot.
         """
         compare, encode, decode = self._get_compare_encode_decode(value)
         snapshot_path = self._snapshot_path(snapshot_name)
@@ -178,7 +178,7 @@ class Snapshot:
         Asserts that the values in values_by_filename equal the current values in the given snapshot directory.
 
         If pytest was run with the --snapshot-update flag, the snapshots will instead be updated.
-        The test will fail there were any changes to the snapshots.
+        The test will fail if there were any changes to the snapshots.
         """
         snapshot_dir_path = self._snapshot_path(snapshot_dir_name)
 

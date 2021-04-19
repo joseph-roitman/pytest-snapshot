@@ -43,8 +43,8 @@ This `pytest`_ plugin was generated with `Cookiecutter`_ along with `@hackebrot`
 Features
 --------
 
-* snapshot testing of strings
-* snapshot testing of collections of strings
+* snapshot testing of strings ands bytes
+* snapshot testing of collections of strings and bytes
 * the user has complete control over the snapshot file path and content
 
 
@@ -102,8 +102,8 @@ In the second example, the developer would simply
 2. verify that the snapshot file contains the new expected result
 3. commit it to version control.
 
-Snapshot testing can be used for expressions whose values are strings.
-For other types, you should first create a *human readable* textual representation of the value.
+Snapshot testing can be used for expressions whose values are strings or bytes.
+For other types, you should first create a *human readable* representation of the value.
 For example, to snapshot test a *json-serializable* value, you could either convert it into json
 or preferably convert it into the more readable yaml format using `PyYAML`_:
 
@@ -114,7 +114,7 @@ or preferably convert it into the more readable yaml format using `PyYAML`_:
 assert_match_dir
 ================
 When snapshot testing a *collection* of values, ``assert_match_dir`` comes in handy.
-It will save a snapshot of a collection as a directory containing snapshot files.
+It will save a snapshot of a collection of values as a directory of snapshot files.
 ``assert_match_dir`` takes a mapping from file name to value.
 
 For example, the following code creates the directory ``snapshots/people``
