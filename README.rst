@@ -43,7 +43,7 @@ This `pytest`_ plugin was generated with `Cookiecutter`_ along with `@hackebrot`
 Features
 --------
 
-* snapshot testing of strings ands bytes
+* snapshot testing of strings and bytes
 * snapshot testing of collections of strings and bytes
 * the user has complete control over the snapshot file path and content
 

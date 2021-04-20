@@ -44,6 +44,22 @@ def _assert_equal(value, expected_value) -> None:
         assert expected_value == value
 
 
+def _file_encode(string: str) -> bytes:
+    """
+    Returns the bytes that would be in a file created using ``path.write_text(string)``.
+    See universal newlines documentation.
+    """
+    return string.replace('\n', os.linesep).encode()
+
+
+def _file_decode(data: bytes) -> str:
+    """
+    Returns the string that would be read from a file using ``path.read_text(string)``.
+    See universal newlines documentation.
+    """
+    return data.decode().replace('\r\n', '\n').replace('\r', '\n')
+
+
 class Snapshot:
     _snapshot_update = None  # type: bool
     _allow_snapshot_deletion = None  # type: bool
@@ -120,7 +136,7 @@ class Snapshot:
         * The decoding function should decode bytes from a snapshot file into a object.
         """
         if isinstance(value, str):
-            return _assert_equal, str.encode, bytes.decode
+            return _assert_equal, _file_encode, _file_decode
         elif isinstance(value, bytes):
             return _assert_equal, lambda x: x, lambda x: x
         else:
