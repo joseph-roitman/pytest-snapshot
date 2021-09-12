@@ -226,7 +226,7 @@ class Snapshot:
 
         # Call assert_match to add, update, or assert equality for all snapshot files in the directory.
         for name, value in values_by_filename.items():
-            if might_be_path_traversal(name):
+            if not might_be_valid_filename(name):
                 raise ValueError('Invalid snapshot name: {}'.format(name))
             self.assert_match(value, snapshot_dir_path.joinpath(name))
 
@@ -273,13 +273,14 @@ def get_valid_filename(s: str) -> str:
     return s
 
 
-def might_be_path_traversal(s: str) -> bool:
+def might_be_valid_filename(s: str) -> bool:
     """
-    Returns true if the given string is definitely a path traversal and not a valid filename.
+    Returns false if the given string is definitely a path traversal and not a valid filename.
 
     Note: This isn't secure, it just catches most accidental path traversals.
     """
-    return '\\' in s or \
-           '/' in s or \
-           s == '..' or \
-           s == '.'
+    return not ('\\' in s or
+                '/' in s or
+                s == '..' or
+                s == '.' or
+                len(s) == 0)

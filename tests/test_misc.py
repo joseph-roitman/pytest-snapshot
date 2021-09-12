@@ -1,4 +1,6 @@
-from pytest_snapshot.plugin import shorten_path
+import pytest
+
+from pytest_snapshot.plugin import shorten_path, might_be_valid_filename
 from tests.utils import assert_pytest_passes
 
 from pathlib import Path
@@ -48,3 +50,20 @@ def test_shorten_path_in_cwd():
 def test_shorten_path_outside_cwd():
     path_outside_cwd = Path().absolute().parent.joinpath('a/b')
     assert shorten_path(path_outside_cwd) == path_outside_cwd
+
+
+@pytest.mark.parametrize('s, expected', [
+    ('snapshot.txt', True),
+    ('snapshot', True),
+    ('.snapshot', True),
+    ('snapshot.', True),
+    ('', False),
+    ('.', False),
+    ('..', False),
+    ('/', False),
+    ('\\', False),
+    ('a/b', False),
+    ('a\\b', False),
+])
+def test_might_be_valid_filename(s, expected):
+    assert might_be_valid_filename(s) == expected
