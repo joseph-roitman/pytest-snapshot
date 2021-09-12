@@ -46,6 +46,20 @@ def test_assert_match_dir_failure(testdir, basic_case_dir):
     assert result.ret == 1
 
 
+def test_assert_match_dir_invalid_type(testdir, basic_case_dir):
+    testdir.makepyfile("""
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            snapshot.assert_match_dir('NOT A DICTIONARY', 'dict_snapshot1')
+    """)
+    result = testdir.runpytest('-v')
+    result.stdout.fnmatch_lines([
+        '*::test_sth FAILED*',
+        'E* TypeError: values_by_filename must be a dictionary',
+    ])
+    assert result.ret == 1
+
+
 def test_assert_match_dir_missing_snapshot(testdir, basic_case_dir):
     testdir.makepyfile("""
         def test_sth(snapshot):

@@ -1,12 +1,11 @@
 import os
 import re
+from pathlib import Path
+from typing import List, Dict, Union
 
 import pytest
 import _pytest.python
 from packaging import version
-from typing import List, Dict, Union
-
-from pathlib import Path
 
 PARAMETRIZED_TEST_REGEX = re.compile(r'^.*?\[(.*)]$')
 
@@ -71,10 +70,10 @@ class Snapshot:
     def __init__(self, snapshot_update: bool, allow_snapshot_deletion: bool, snapshot_dir: Path):
         self._snapshot_update = snapshot_update
         self._allow_snapshot_deletion = allow_snapshot_deletion
+        self.snapshot_dir = snapshot_dir
         self._created_snapshots = []
         self._updated_snapshots = []
         self._snapshots_to_delete = []
-        self.snapshot_dir = snapshot_dir
 
     def __enter__(self):
         return self
@@ -196,6 +195,9 @@ class Snapshot:
         If pytest was run with the --snapshot-update flag, the snapshots will instead be updated.
         The test will fail if there were any changes to the snapshots.
         """
+        if not isinstance(values_by_filename, dict):
+            raise TypeError('values_by_filename must be a dictionary')
+
         snapshot_dir_path = self._snapshot_path(snapshot_dir_name)
 
         if snapshot_dir_path.is_dir():
@@ -229,7 +231,7 @@ class Snapshot:
 
 def shorten_path(path: Path) -> Path:
     """
-    Returns the path relative to the current working directory is possible. Otherwise return the path unchanged.
+    Returns the path relative to the current working directory if possible. Otherwise return the path unchanged.
     """
     try:
         return path.relative_to(os.getcwd())
@@ -250,7 +252,7 @@ def get_default_snapshot_dir(node: _pytest.python.Function) -> Path:
         test_name = node.originalname
         parametrize_match = PARAMETRIZED_TEST_REGEX.match(node.name)
         assert parametrize_match is not None, 'Expected request.node.name to be of format TEST_FUNCTION[PARAMS]'
-        parametrize_name = PARAMETRIZED_TEST_REGEX.match(node.name).group(1)
+        parametrize_name = parametrize_match.group(1)
         parametrize_name = get_valid_filename(parametrize_name)
     default_snapshot_dir = test_module_dir.join('snapshots', test_module, test_name)
     if parametrize_name:
