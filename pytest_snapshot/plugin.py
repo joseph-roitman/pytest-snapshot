@@ -226,6 +226,8 @@ class Snapshot:
 
         # Call assert_match to add, update, or assert equality for all snapshot files in the directory.
         for name, value in values_by_filename.items():
+            if might_be_path_traversal(name):
+                raise ValueError('Invalid snapshot name: {}'.format(name))
             self.assert_match(value, snapshot_dir_path.joinpath(name))
 
 
@@ -266,4 +268,18 @@ def get_valid_filename(s: str) -> str:
     Taken from https://github.com/django/django/blob/master/django/utils/text.py
     """
     s = str(s).strip().replace(' ', '_')
-    return re.sub(r'(?u)[^-\w.]', '', s)
+    s = re.sub(r'(?u)[^-\w.]', '', s)
+    s = {'': 'empty', '.': 'dot', '..': 'dotdot'}.get(s, s)
+    return s
+
+
+def might_be_path_traversal(s: str) -> bool:
+    """
+    Returns true if the given string is definitely a path traversal and not a valid filename.
+
+    Note: This isn't secure, it just catches most accidental path traversals.
+    """
+    return '\\' in s or \
+           '/' in s or \
+           s == '..' or \
+           s == '.'
