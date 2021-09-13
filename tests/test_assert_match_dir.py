@@ -46,6 +46,20 @@ def test_assert_match_dir_failure(testdir, basic_case_dir):
     assert result.ret == 1
 
 
+def test_assert_match_dir_invalid_type(testdir, basic_case_dir):
+    testdir.makepyfile("""
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            snapshot.assert_match_dir('NOT A DICTIONARY', 'dict_snapshot1')
+    """)
+    result = testdir.runpytest('-v')
+    result.stdout.fnmatch_lines([
+        '*::test_sth FAILED*',
+        'E* TypeError: values_by_filename must be a dictionary',
+    ])
+    assert result.ret == 1
+
+
 def test_assert_match_dir_missing_snapshot(testdir, basic_case_dir):
     testdir.makepyfile("""
         def test_sth(snapshot):
@@ -235,5 +249,22 @@ def test_assert_match_dir_existing_snapshot_is_not_dir(testdir, basic_case_dir):
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
         "E* AssertionError: snapshot exists but is not a directory: case_dir?file1",
+    ])
+    assert result.ret == 1
+
+
+def test_assert_match_dir_path_traversal_name(testdir, basic_case_dir):
+    testdir.makepyfile("""
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            snapshot.assert_match_dir({
+                'subdir/obj1.txt': 'the value of obj1.txt',
+                'obj2.txt': 'the value of obj2.txt',
+            }, 'dict_snapshot1')
+    """)
+    result = testdir.runpytest('-v', '--snapshot-update')
+    result.stdout.fnmatch_lines([
+        '*::test_sth FAILED*',
+        'E* ValueError: Invalid snapshot name: subdir/obj1.txt'
     ])
     assert result.ret == 1

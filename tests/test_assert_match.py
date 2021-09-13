@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import pytest
 
@@ -254,3 +255,49 @@ def test_assert_match_existing_snapshot_is_not_file(testdir, basic_case_dir):
         "E* AssertionError: snapshot exists but is not a file: case_dir?directory1",
     ])
     assert result.ret == 1
+
+
+@pytest.mark.parametrize('tested_value', [
+    b'',
+    '',
+    bytes(bytearray(range(256))),
+    ''.join(chr(i) for i in range(0, 10000)).replace('\r', ''),
+    '  \n \t \n  Whitespace!   \n\t  Whitespace!  \n  \t \n  ',
+    # We don't support \r due to cross-compatibility and git by default modifying snapshot files...
+    pytest.param('\r', marks=pytest.mark.xfail(strict=True)),
+], ids=[
+    'empty-bytes',
+    'empty-string',
+    'all-bytes',
+    'unicode',
+    'whitespace',
+    'slash-r'
+])
+def test_assert_match_edge_cases(testdir, basic_case_dir, tested_value):
+    """
+    This test tests many possible values to snapshot test.
+    This test will fail if we change the snapshot file format in any way.
+    This test also checks that assert_match will pass after a snapshot update.
+    """
+    testdir.makepyfile(r"""
+        def test_sth(snapshot):
+            tested_value = {tested_value!r}
+            snapshot.snapshot_dir = 'case_dir'
+            snapshot.assert_match(tested_value, 'tested_value_snapshot')
+    """.format(tested_value=tested_value))
+    result = testdir.runpytest('-v', '--snapshot-update')
+    result.stdout.fnmatch_lines([
+        '*::test_sth PASSED*',
+        '*::test_sth ERROR*',
+    ])
+    assert result.ret == 1
+
+    if isinstance(tested_value, str):
+        expected_encoded_snapshot = tested_value.replace('\n', os.linesep).encode()
+    else:
+        expected_encoded_snapshot = tested_value
+
+    encoded_snapshot = Path(str(basic_case_dir)).joinpath('tested_value_snapshot').read_bytes()
+    assert encoded_snapshot == expected_encoded_snapshot
+
+    assert_pytest_passes(testdir)  # assert that snapshot update worked
