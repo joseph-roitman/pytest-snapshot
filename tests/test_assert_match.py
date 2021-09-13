@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+from pytest_snapshot.plugin import _file_encode
 from tests.utils import assert_pytest_passes
 
 
@@ -301,3 +302,79 @@ def test_assert_match_edge_cases(testdir, basic_case_dir, tested_value):
     assert encoded_snapshot == expected_encoded_snapshot
 
     assert_pytest_passes(testdir)  # assert that snapshot update worked
+
+
+def test_assert_match_unsupported_value_existing_snapshot(testdir, basic_case_dir):
+    """
+    Test that when running tests without --snapshot-update, we don't tell the user that the value is unsupported.
+    We instead tell the user that the value does not equal the snapshot. This behaviour is more helpful.
+    """
+    basic_case_dir.join('newline.txt').write_binary(_file_encode('\n'))
+    testdir.makepyfile(r"""
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            snapshot.assert_match('\r', 'newline.txt')
+    """)
+    result = testdir.runpytest('-v')
+    result.stdout.fnmatch_lines([
+        '*::test_sth FAILED*',
+        'E* AssertionError: value does not match the expected value in snapshot case_dir?newline.txt',
+        "E* - '\\n'",
+        "E* + '\\r'",
+    ])
+    assert result.ret == 1
+
+
+def test_assert_match_unsupported_value_update_existing_snapshot(testdir, basic_case_dir):
+    basic_case_dir.join('newline.txt').write_binary(_file_encode('\n'))
+    testdir.makepyfile(r"""
+        import os
+        from unittest import mock
+        def _file_encode(string: str) -> bytes:
+            return string.replace('\n', os.linesep).encode()
+        
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            with mock.patch('pytest_snapshot.plugin._file_encode', _file_encode):
+                snapshot.assert_match('\r', 'newline.txt')
+    """)
+    result = testdir.runpytest('-v', '--snapshot-update')
+    result.stdout.fnmatch_lines([
+        '*::test_sth FAILED*',
+        "E* ValueError: value is not supported by pytest-snapshot's serializer.",
+    ])
+    assert result.ret == 1
+
+
+def test_assert_match_unsupported_value_create_snapshot(testdir, basic_case_dir):
+    testdir.makepyfile(r"""
+        import os
+        from unittest import mock
+        def _file_encode(string: str) -> bytes:
+            return string.replace('\n', os.linesep).encode()
+        
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            with mock.patch('pytest_snapshot.plugin._file_encode', _file_encode):
+                snapshot.assert_match('\r', 'newline.txt')
+    """)
+    result = testdir.runpytest('-v', '--snapshot-update')
+    result.stdout.fnmatch_lines([
+        '*::test_sth FAILED*',
+        "E* ValueError: value is not supported by pytest-snapshot's serializer.",
+    ])
+    assert result.ret == 1
+
+
+def test_assert_match_unsupported_value_slash_r(testdir, basic_case_dir):
+    testdir.makepyfile(r"""
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            snapshot.assert_match('\r', 'newline.txt')
+    """)
+    result = testdir.runpytest('-v', '--snapshot-update')
+    result.stdout.fnmatch_lines([
+        '*::test_sth FAILED*',
+        'E* ValueError: Snapshot testing strings containing "\\r" is not supported.'
+    ])
+    assert result.ret == 1
