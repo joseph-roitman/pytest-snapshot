@@ -24,7 +24,6 @@ setup(
     packages=['pytest_snapshot'],
     python_requires='>=3.5',
     install_requires=[
-        'packaging',
         'pytest>=3.0.0',
     ],
     classifiers=[

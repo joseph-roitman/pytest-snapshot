@@ -1,6 +1,9 @@
+from unittest import mock
+
 import pytest
 
-from pytest_snapshot.plugin import shorten_path, might_be_valid_filename
+from pytest_snapshot.plugin import shorten_path, simple_version_parse, _pytest_expected_on_right, \
+    might_be_valid_filename
 from tests.utils import assert_pytest_passes
 
 from pathlib import Path
@@ -67,3 +70,40 @@ def test_shorten_path_outside_cwd():
 ])
 def test_might_be_valid_filename(s, expected):
     assert might_be_valid_filename(s) == expected
+
+
+@pytest.mark.parametrize('version_str, version', [
+    ('0.0.0', (0, 0, 0)),
+    ('55.2312.123132', (55, 2312, 123132)),
+    ('1.2.3rc', (1, 2, 3)),
+])
+def test_simple_version_parse_success(version_str, version):
+    assert simple_version_parse(version_str) == version
+
+
+@pytest.mark.parametrize('version_str', [
+    '',
+    'rc1.2.3',
+    '1!2.3.4',
+    'a.b.c'
+    '1.2'
+    '1.2.'
+])
+def test_simple_version_parse_error(version_str):
+    with pytest.raises(ValueError):
+        simple_version_parse(version_str)
+
+
+@pytest.mark.parametrize('version_str, expected_on_right', [
+    ('4.9.9', False),
+    ('5.3.9', False),
+    ('5.3.9', False),
+    ('5.4.0', True),
+    ('5.4.1', True),
+    ('5.5.0', True),
+    ('6.0.0', True),
+    ('badversion', True),
+])
+def test_pytest_expected_on_right(version_str, expected_on_right):
+    with mock.patch('pytest.__version__', version_str):
+        assert _pytest_expected_on_right() == expected_on_right

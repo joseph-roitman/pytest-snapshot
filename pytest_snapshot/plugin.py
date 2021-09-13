@@ -5,9 +5,9 @@ from typing import List, Dict, Union
 
 import pytest
 import _pytest.python
-from packaging import version
 
 PARAMETRIZED_TEST_REGEX = re.compile(r'^.*?\[(.*)]$')
+SIMPLE_VERSION_REGEX = re.compile(r'([0-9]+)\.([0-9]+)\.([0-9]+)')
 
 
 def pytest_addoption(parser):
@@ -34,13 +34,11 @@ def snapshot(request):
         yield snapshot
 
 
-def _assert_equal(value, expected_value) -> None:
-    # pytest diffs before version 5.4.0 required expected to be on the left hand side.
-    expected_on_right = version.parse(pytest.__version__) >= version.parse("5.4.0")
-    if expected_on_right:
-        assert value == expected_value
+def _assert_equal(value, snapshot) -> None:
+    if _pytest_expected_on_right():
+        assert value == snapshot
     else:
-        assert expected_value == value
+        assert snapshot == value
 
 
 def _file_encode(string: str) -> bytes:
@@ -294,3 +292,25 @@ def might_be_valid_filename(s: str) -> bool:
                 s == '..' or
                 s == '.' or
                 len(s) == 0)
+
+
+def simple_version_parse(version: str):
+    """
+    Returns a 3 tuple of the versions major, minor, and patch.
+    Raises a value error if the version string is unsupported.
+    """
+    match = SIMPLE_VERSION_REGEX.match(version)
+    if match is None:
+        raise ValueError('Unsupported version format')
+
+    return tuple(int(part) for part in match.groups())
+
+
+def _pytest_expected_on_right():
+    # pytest diffs before version 5.4.0 assumed expected to be on the left hand side.
+    try:
+        pytest_version = simple_version_parse(pytest.__version__)
+    except ValueError:
+        return True
+    else:
+        return pytest_version >= (5, 4, 0)
