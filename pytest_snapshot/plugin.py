@@ -48,6 +48,14 @@ def _file_encode(string: str) -> bytes:
     Returns the bytes that would be in a file created using ``path.write_text(string)``.
     See universal newlines documentation.
     """
+    if '\r' in string:
+        raise ValueError('''\
+Snapshot testing strings containing "\\r" is not supported.
+To snapshot test non-standard newlines you should convert the tested value to bytes.
+Warning: git may decide to modify the newlines in the snapshot file.
+To avoid this read \
+https://docs.github.com/en/get-started/getting-started-with-git/configuring-git-to-handle-line-endings''')
+
     return string.replace('\n', os.linesep).encode()
 
 

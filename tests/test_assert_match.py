@@ -364,3 +364,17 @@ def test_assert_match_unsupported_value_create_snapshot(testdir, basic_case_dir)
         "E* ValueError: value is not supported by pytest-snapshot's serializer.",
     ])
     assert result.ret == 1
+
+
+def test_assert_match_unsupported_value_slash_r(testdir, basic_case_dir):
+    testdir.makepyfile(r"""
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            snapshot.assert_match('\r', 'newline.txt')
+    """)
+    result = testdir.runpytest('-v', '--snapshot-update')
+    result.stdout.fnmatch_lines([
+        '*::test_sth FAILED*',
+        'E* ValueError: Snapshot testing strings containing "\\r" is not supported.'
+    ])
+    assert result.ret == 1
