@@ -153,25 +153,27 @@ class Snapshot:
 
         if snapshot_path.is_file():
             encoded_expected_value = snapshot_path.read_bytes()
-            expected_value = decode(encoded_expected_value)
         elif snapshot_path.exists():
             raise AssertionError('snapshot exists but is not a file: {}'.format(shorten_path(snapshot_path)))
         else:
             encoded_expected_value = None
-            expected_value = None
 
         if self._snapshot_update:
             encoded_value = encode(value)
-            snapshot_path.parent.mkdir(parents=True, exist_ok=True)
-            if encoded_expected_value is not None:
-                if encoded_expected_value != encoded_value:
-                    snapshot_path.write_bytes(encoded_value)
-                    self._updated_snapshots.append(snapshot_path)
-            else:
+            if encoded_expected_value is None or encoded_value != encoded_expected_value:
+                decoded_encoded_value = decode(encoded_value)
+                if decoded_encoded_value != value:
+                    raise ValueError("value is not supported by pytest-snapshot's serializer.")
+
+                snapshot_path.parent.mkdir(parents=True, exist_ok=True)
                 snapshot_path.write_bytes(encoded_value)
-                self._created_snapshots.append(snapshot_path)
+                if encoded_expected_value is None:
+                    self._created_snapshots.append(snapshot_path)
+                else:
+                    self._updated_snapshots.append(snapshot_path)
         else:
             if encoded_expected_value is not None:
+                expected_value = decode(encoded_expected_value)
                 try:
                     compare(value, expected_value)
                 except AssertionError as e:
