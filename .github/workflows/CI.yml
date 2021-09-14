@@ -5,28 +5,33 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
   schedule:
     - cron: '0 4 * * *'
 jobs:
   tests:
-    name: Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
+    name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8, 3.9, 3.x, pypy3]
-
+        os: [ubuntu-latest]
+        python-version: [3.5, 3.6, 3.7, 3.8, 3.9, 3.10.0-rc - 4.0.0-alpha, pypy3]
+        include:  # To save resources, we only test the latest version (and 3.9 for pytest <6)
+          - python-version: 3.9
+            os: windows-latest
+          - python-version: 3.10.0-rc - 4.0.0-alpha
+            os: windows-latest
+          - python-version: 3.9
+            os: macos-latest
+          - python-version: 3.10.0-rc - 4.0.0-alpha
+            os: macos-latest
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        set -xe
         python -VV
         python -m site
         python -m pip install --upgrade pip setuptools wheel
@@ -34,7 +39,7 @@ jobs:
     - name: Run tox targets for ${{ matrix.python-version }}
       run: python -m tox
     - name: Upload coverage report
-      uses: codecov/codecov-action@v1
+      uses: codecov/codecov-action@v2
       with:
         directory: coverage-reports
-        name: ${{ matrix.python-version }}
+        name: ${{ matrix.python-version }} on ${{ matrix.os }}
