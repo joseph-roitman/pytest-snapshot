@@ -15,12 +15,12 @@ def pytest_addoption(parser):
     group.addoption(
         '--snapshot-update',
         action='store_true',
-        help='Update snapshots.'
+        help='Update snapshots.',
     )
     group.addoption(
         '--allow-snapshot-deletion',
         action='store_true',
-        help='Allow snapshot deletion when updating snapshots.'
+        help='Allow snapshot deletion when updating snapshots.',
     )
 
 
