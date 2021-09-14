@@ -332,7 +332,7 @@ def test_assert_match_unsupported_value_update_existing_snapshot(testdir, basic_
         from unittest import mock
         def _file_encode(string: str) -> bytes:
             return string.replace('\n', os.linesep).encode()
-        
+
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
             with mock.patch('pytest_snapshot.plugin._file_encode', _file_encode):
@@ -352,7 +352,7 @@ def test_assert_match_unsupported_value_create_snapshot(testdir, basic_case_dir)
         from unittest import mock
         def _file_encode(string: str) -> bytes:
             return string.replace('\n', os.linesep).encode()
-        
+
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
             with mock.patch('pytest_snapshot.plugin._file_encode', _file_encode):
