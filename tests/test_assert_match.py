@@ -272,7 +272,7 @@ def test_assert_match_existing_snapshot_is_not_file(testdir, basic_case_dir):
     'all-bytes',
     'unicode',
     'whitespace',
-    'slash-r'
+    'slash-r',
 ])
 def test_assert_match_edge_cases(testdir, basic_case_dir, tested_value):
     """
@@ -375,6 +375,6 @@ def test_assert_match_unsupported_value_slash_r(testdir, basic_case_dir):
     result = testdir.runpytest('-v', '--snapshot-update')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        'E* ValueError: Snapshot testing strings containing "\\r" is not supported.'
+        'E* ValueError: Snapshot testing strings containing "\\r" is not supported.',
     ])
     assert result.ret == 1

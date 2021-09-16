@@ -85,9 +85,9 @@ def test_simple_version_parse_success(version_str, version):
     '',
     'rc1.2.3',
     '1!2.3.4',
-    'a.b.c'
-    '1.2'
-    '1.2.'
+    'a.b.c',
+    '1.2',
+    '1.2.',
 ])
 def test_simple_version_parse_error(version_str):
     with pytest.raises(ValueError):
