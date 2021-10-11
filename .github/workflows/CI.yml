@@ -11,19 +11,27 @@ jobs:
   tests:
     name: Python ${{ matrix.python-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.5, 3.6, 3.7, 3.8, 3.9, 3.10.0-rc - 4.0.0-alpha, pypy3]
+        python-version: [3.5, 3.6, 3.7, 3.8, 3.9, 3.10 - 4.0.0-alpha, pypy3]
+        experimental: [false]
         include:  # To save resources, we only test the latest version (and 3.9 for pytest <6)
           - python-version: 3.9
             os: windows-latest
-          - python-version: 3.10.0-rc - 4.0.0-alpha
+            experimental: false
+          - python-version: 3.10 - 4.0.0-alpha
             os: windows-latest
+            experimental: false
           - python-version: 3.9
             os: macos-latest
-          - python-version: 3.10.0-rc - 4.0.0-alpha
+            # macos builds sometimes get stuck starting "python -m tox".
+            experimental: true
+          - python-version: 3.10 - 4.0.0-alpha
             os: macos-latest
+            # macos builds sometimes get stuck starting "python -m tox".
+            experimental: true
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
