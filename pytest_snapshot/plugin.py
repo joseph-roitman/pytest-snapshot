@@ -8,6 +8,7 @@ import _pytest.python
 
 PARAMETRIZED_TEST_REGEX = re.compile(r'^.*?\[(.*)]$')
 SIMPLE_VERSION_REGEX = re.compile(r'([0-9]+)\.([0-9]+)\.([0-9]+)')
+ILLEGAL_FILENAME_CHARS = r'\/:*?"<>|'
 
 
 def pytest_addoption(parser):
@@ -235,7 +236,7 @@ class Snapshot:
         # Call assert_match to add, update, or assert equality for all snapshot files in the directory.
         for name, value in values_by_filename.items():
             if not might_be_valid_filename(name):
-                raise ValueError('Invalid snapshot name: {}'.format(name))
+                raise ValueError('Invalid snapshot name: {!r}'.format(name))
             self.assert_match(value, snapshot_dir_path.joinpath(name))
 
 
@@ -283,15 +284,16 @@ def get_valid_filename(s: str) -> str:
 
 def might_be_valid_filename(s: str) -> bool:
     """
-    Returns false if the given string is definitely a path traversal and not a valid filename.
+    Returns false if the given string is a path traversal or not a valid filename.
 
-    Note: This isn't secure, it just catches most accidental path traversals.
+    Note: This isn't secure, it just catches most accidental path traversals or invalid filenames.
     """
-    return not ('\\' in s or
-                '/' in s or
-                s == '..' or
-                s == '.' or
-                len(s) == 0)
+    return not (
+        len(s) == 0
+        or s == '.'
+        or s == '..'
+        or any(c in s for c in ILLEGAL_FILENAME_CHARS)
+    )
 
 
 def simple_version_parse(version: str):

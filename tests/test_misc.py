@@ -67,6 +67,8 @@ def test_shorten_path_outside_cwd():
     ('\\', False),
     ('a/b', False),
     ('a\\b', False),
+    ('a:b', False),
+    ('a"b', False),
 ])
 def test_might_be_valid_filename(s, expected):
     assert might_be_valid_filename(s) == expected
