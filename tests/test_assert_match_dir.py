@@ -265,6 +265,6 @@ def test_assert_match_dir_path_traversal_name(testdir, basic_case_dir):
     result = testdir.runpytest('-v', '--snapshot-update')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        'E* ValueError: Invalid snapshot name: subdir/obj1.txt',
+        "E* ValueError: Invalid snapshot name: 'subdir/obj1.txt'",
     ])
     assert result.ret == 1
