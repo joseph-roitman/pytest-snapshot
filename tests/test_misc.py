@@ -2,8 +2,8 @@ from unittest import mock
 
 import pytest
 
-from pytest_snapshot.plugin import shorten_path, simple_version_parse, _pytest_expected_on_right, \
-    might_be_valid_filename
+from pytest_snapshot._utils import shorten_path, might_be_valid_filename, simple_version_parse, \
+    _pytest_expected_on_right, flatten_dict, flatten_filesystem_dict
 from tests.utils import assert_pytest_passes
 
 from pathlib import Path
@@ -99,7 +99,6 @@ def test_simple_version_parse_error(version_str):
 @pytest.mark.parametrize('version_str, expected_on_right', [
     ('4.9.9', False),
     ('5.3.9', False),
-    ('5.3.9', False),
     ('5.4.0', True),
     ('5.4.1', True),
     ('5.5.0', True),
@@ -109,3 +108,49 @@ def test_simple_version_parse_error(version_str):
 def test_pytest_expected_on_right(version_str, expected_on_right):
     with mock.patch('pytest.__version__', version_str):
         assert _pytest_expected_on_right() == expected_on_right
+
+
+def test_flatten_dict():
+    result = flatten_dict({
+        'a': 1,
+        'b': {
+            'ba': 2,
+            'bb': {
+                'bba': 3,
+                'bbb': 4,
+            },
+        },
+        'empty': {},
+    })
+    result = sorted(result)  # Needed to support python 3.5
+    assert result == [(['a'], 1), (['b', 'ba'], 2), (['b', 'bb', 'bba'], 3), (['b', 'bb', 'bbb'], 4)]
+
+
+def test_flatten_filesystem_dict_success():
+    result = flatten_filesystem_dict({
+        'file1': 'file1_contents',
+        'dir1': {
+            'file2': 'file2_contents',
+            'dir2': {
+                'file3': 'file3_contents',
+            },
+        },
+        'empty_dir': {},
+    })
+    assert result == {
+        'file1': 'file1_contents',
+        'dir1/file2': 'file2_contents',
+        'dir1/dir2/file3': 'file3_contents',
+    }
+
+
+@pytest.mark.parametrize('illegal_filename', [
+    'a/b',
+    '.',
+    '',
+])
+def test_flatten_filesystem_dict_illegal_filename(illegal_filename):
+    with pytest.raises(ValueError):
+        flatten_filesystem_dict({
+            illegal_filename: 'contents'
+        })

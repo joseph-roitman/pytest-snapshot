@@ -35,17 +35,13 @@ the developer simply needs to
 2. verify that the snapshot files contain the new expected results
 3. commit the snapshot changes to version control
 
-----
-
-This `pytest`_ plugin was generated with `Cookiecutter`_ along with `@hackebrot`_'s `cookiecutter-pytest-plugin`_ template.
-
 
 Features
 --------
 
 * snapshot testing of strings and bytes
-* snapshot testing of collections of strings and bytes
-* the user has complete control over the snapshot file path and content
+* snapshot testing of (optionally nested) collections of strings and bytes
+* complete control of the snapshot file path and content
 
 
 Requirements
@@ -115,7 +111,8 @@ assert_match_dir
 ================
 When snapshot testing a *collection* of values, ``assert_match_dir`` comes in handy.
 It will save a snapshot of a collection of values as a directory of snapshot files.
-``assert_match_dir`` takes a mapping from file name to value.
+``assert_match_dir`` takes a dictionary from file name to value.
+Dictionaries can also be nested to create nested directories containing snapshot files.
 
 For example, the following code creates the directory ``snapshots/people``
 containing files ``john.json`` and ``jane.json``.
@@ -125,8 +122,8 @@ containing files ``john.json`` and ``jane.json``.
     def test_something(snapshot):
         snapshot.snapshot_dir = 'snapshots'
         snapshot.assert_match_dir({
-            'john.json': '{"first name": "John", "last name": "Doe", "age": 20}',
-            'jane.json': '{"first name": "Jane", "last name": "Doe", "age": 21}',
+            'john.json': '{"first name": "John", "last name": "Doe"}',
+            'jane.json': '{"first name": "Jane", "last name": "Doe"}',
         }, 'people')
 
 When running ``pytest --snapshot-update``, snapshot files will be added, updated, or deleted as necessary.
@@ -168,10 +165,8 @@ Next, add a test that is parametrized on all test case directories. The test sho
         return yaml.dump(obj, indent=2)
 
 
-    @pytest.mark.parametrize('case_dir', [os.path.join('test_cases', d) for d in os.listdir('test_cases')])
+    @pytest.mark.parametrize('case_dir', list(Path('test_cases').iterdir()))
     def test_json(case_dir, snapshot):
-        case_dir = Path(case_dir)
-
         # Read input files from the case directory.
         input_json = case_dir.joinpath('input.json').read_text()
 
@@ -183,7 +178,8 @@ Next, add a test that is parametrized on all test case directories. The test sho
         snapshot.assert_match(output_yaml, 'output.yml')
 
 Now, we can run ``pytest --snapshot-update`` to create an ``output.yml`` snapshot for each test case.
-If in the future we change the tested function, we can quickly fix the test with another ``pytest --snapshot-update``.
+If we later decide to modify the tested function's behaviour,
+we can fix the test cases with another ``pytest --snapshot-update``.
 
 
 Similar Packages
@@ -206,8 +202,7 @@ Contributing
 Contributions are very welcome. Before contributing, please discuss the change with me.
 I wish to keep this plugin flexible and not enforce any project layout on the user.
 
-Tests can be run with `tox`_, please ensure
-the coverage at least stays the same before you submit a pull request.
+Tests can be run with `tox`_.
 
 
 License
@@ -224,6 +219,11 @@ Links
 -----
 * Releases: https://pypi.org/project/pytest-snapshot/
 * Code: https://github.com/joseph-roitman/pytest-snapshot
+
+
+----
+
+This `pytest`_ plugin was generated with `Cookiecutter`_ along with `@hackebrot`_'s `cookiecutter-pytest-plugin`_ template.
 
 .. _`Cookiecutter`: https://github.com/audreyr/cookiecutter
 .. _`@hackebrot`: https://github.com/hackebrot

@@ -1,14 +1,14 @@
 import os
 import re
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import List, Union
 
 import pytest
 import _pytest.python
 
+from pytest_snapshot._utils import shorten_path, get_valid_filename, _pytest_expected_on_right, flatten_filesystem_dict
+
 PARAMETRIZED_TEST_REGEX = re.compile(r'^.*?\[(.*)]$')
-SIMPLE_VERSION_REGEX = re.compile(r'([0-9]+)\.([0-9]+)\.([0-9]+)')
-ILLEGAL_FILENAME_CHARS = r'\/:*?"<>|'
 
 
 def pytest_addoption(parser):
@@ -27,7 +27,7 @@ def pytest_addoption(parser):
 
 @pytest.fixture
 def snapshot(request):
-    default_snapshot_dir = get_default_snapshot_dir(request.node)
+    default_snapshot_dir = _get_default_snapshot_dir(request.node)
 
     with Snapshot(request.config.option.snapshot_update,
                   request.config.option.allow_snapshot_deletion,
@@ -134,7 +134,7 @@ class Snapshot:
 
     def _get_compare_encode_decode(self, value: Union[str, bytes]):
         """
-        Returns a 3-tuple of a compare function, an encoding function and a decoding function.
+        Returns a 3-tuple of a compare function, an encoding function, and a decoding function.
 
         * The compare function should compare the object to the value of its snapshot,
           raising an AssertionError with a useful error message if they are different.
@@ -197,20 +197,21 @@ class Snapshot:
                     "snapshot {} doesn't exist. (run pytest with --snapshot-update to create it)".format(
                         shorten_path(snapshot_path)))
 
-    def assert_match_dir(self, values_by_filename: Dict[str, Union[str, bytes]], snapshot_dir_name: Union[str, Path]):
+    def assert_match_dir(self, dir_dict: dict, snapshot_dir_name: Union[str, Path]):
         """
-        Asserts that the values in values_by_filename equal the current values in the given snapshot directory.
+        Asserts that the values in dir_dict equal the current values in the given snapshot directory.
 
-        If pytest was run with the --snapshot-update flag, the snapshots will instead be updated.
+        If pytest was run with the --snapshot-update flag, the snapshots will be updated.
         The test will fail if there were any changes to the snapshots.
         """
-        if not isinstance(values_by_filename, dict):
-            raise TypeError('values_by_filename must be a dictionary')
+        if not isinstance(dir_dict, dict):
+            raise TypeError('dir_dict must be a dictionary')
 
         snapshot_dir_path = self._snapshot_path(snapshot_dir_name)
-
+        values_by_filename = flatten_filesystem_dict(dir_dict)
         if snapshot_dir_path.is_dir():
-            existing_names = {p.name for p in snapshot_dir_path.iterdir()}
+            existing_names = {p.relative_to(snapshot_dir_path).as_posix()
+                              for p in snapshot_dir_path.rglob('*') if p.is_file()}
         elif snapshot_dir_path.exists():
             raise AssertionError('snapshot exists but is not a directory: {}'.format(shorten_path(snapshot_dir_path)))
         else:
@@ -235,22 +236,10 @@ class Snapshot:
 
         # Call assert_match to add, update, or assert equality for all snapshot files in the directory.
         for name, value in values_by_filename.items():
-            if not might_be_valid_filename(name):
-                raise ValueError('Invalid snapshot name: {!r}'.format(name))
             self.assert_match(value, snapshot_dir_path.joinpath(name))
 
 
-def shorten_path(path: Path) -> Path:
-    """
-    Returns the path relative to the current working directory if possible. Otherwise return the path unchanged.
-    """
-    try:
-        return path.relative_to(os.getcwd())
-    except ValueError:
-        return path
-
-
-def get_default_snapshot_dir(node: _pytest.python.Function) -> Path:
+def _get_default_snapshot_dir(node: _pytest.python.Function) -> Path:
     """
     Returns the default snapshot directory for the pytest test.
     """
@@ -269,50 +258,3 @@ def get_default_snapshot_dir(node: _pytest.python.Function) -> Path:
     if parametrize_name:
         default_snapshot_dir = default_snapshot_dir.join(parametrize_name)
     return Path(str(default_snapshot_dir))
-
-
-def get_valid_filename(s: str) -> str:
-    """
-    Return the given string converted to a string that can be used for a clean filename.
-    Taken from https://github.com/django/django/blob/master/django/utils/text.py
-    """
-    s = str(s).strip().replace(' ', '_')
-    s = re.sub(r'(?u)[^-\w.]', '', s)
-    s = {'': 'empty', '.': 'dot', '..': 'dotdot'}.get(s, s)
-    return s
-
-
-def might_be_valid_filename(s: str) -> bool:
-    """
-    Returns false if the given string is a path traversal or not a valid filename.
-
-    Note: This isn't secure, it just catches most accidental path traversals or invalid filenames.
-    """
-    return not (
-        len(s) == 0
-        or s == '.'
-        or s == '..'
-        or any(c in s for c in ILLEGAL_FILENAME_CHARS)
-    )
-
-
-def simple_version_parse(version: str):
-    """
-    Returns a 3 tuple of the versions major, minor, and patch.
-    Raises a value error if the version string is unsupported.
-    """
-    match = SIMPLE_VERSION_REGEX.match(version)
-    if match is None:
-        raise ValueError('Unsupported version format')
-
-    return tuple(int(part) for part in match.groups())
-
-
-def _pytest_expected_on_right():
-    # pytest diffs before version 5.4.0 assumed expected to be on the left hand side.
-    try:
-        pytest_version = simple_version_parse(pytest.__version__)
-    except ValueError:
-        return True
-    else:
-        return pytest_version >= (5, 4, 0)
