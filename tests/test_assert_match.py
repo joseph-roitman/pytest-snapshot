@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+from pytest_snapshot._utils import simple_version_parse
 from pytest_snapshot.plugin import _file_encode
 from tests.utils import assert_pytest_passes
 
@@ -87,6 +88,37 @@ def test_assert_match_failure_bytes(testdir, basic_case_dir):
         r"E* - b'the valu\xc3\x89 of snapshot1.txt{}'".format(repr(os.linesep)[1:-1]),
         r"E* + b'the INCORRECT value of snapshot1.txt{}'".format(repr(os.linesep)[1:-1]),
     ])
+    assert result.ret == 1
+
+
+@pytest.mark.skipif(simple_version_parse(pytest.__version__) < (5, 0, 0), reason="consecutive flag not supported.")
+def test_assert_match_failure_assert_plain(testdir, basic_case_dir):
+    """
+    Testing plugin behavior when users run "pytest --assert=plain" is complicated and fragile since the outer pytest
+    and inner pytest affect one another. To get around this, we mock "--assert=plain" behavior.
+    """
+    testdir.makepyfile(r"""
+        from unittest import mock
+        def _assert_equal_mock(value, snapshot):
+            raise AssertionError()
+
+        def test_sth(snapshot):
+            snapshot.snapshot_dir = 'case_dir'
+            with mock.patch('pytest_snapshot.plugin._assert_equal', _assert_equal_mock):
+                snapshot.assert_match('the INCORRECT value of snapshot1.txt\n', 'snapshot1.txt')
+    """)
+
+    result = testdir.runpytest('-v')
+    result.stdout.fnmatch_lines([
+        '*::test_sth FAILED*',
+    ])
+    # Use consecutive=True to verify that the mock was not accidentally broken.
+    result.stdout.fnmatch_lines([
+        ">* raise AssertionError(snapshot_diff_msg)",
+        'E* AssertionError: value does not match the expected value in snapshot case_dir?snapshot1.txt',
+        '',
+        '*plugin.py:*: AssertionError',
+    ], consecutive=True)
     assert result.ret == 1
 
 
