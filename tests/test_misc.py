@@ -1,10 +1,12 @@
+import sys
 from unittest import mock
+from unittest.mock import Mock
 
 import pytest
 
 from pytest_snapshot._utils import shorten_path, might_be_valid_filename, simple_version_parse, \
     _pytest_expected_on_right, flatten_dict, flatten_filesystem_dict
-from tests.utils import assert_pytest_passes
+from tests.utils import assert_pytest_passes, runpytest_with_assert_mode
 
 from pathlib import Path
 
@@ -154,3 +156,18 @@ def test_flatten_filesystem_dict_illegal_filename(illegal_filename):
         flatten_filesystem_dict({
             illegal_filename: 'contents'
         })
+
+
+@pytest.mark.skipif(sys.version_info < (3, 6), reason="assert_called_once doesn't exist in Python <3.6")
+def test_runpytest_with_assert_mode(request):
+    testdir = Mock()
+    runpytest_with_assert_mode(testdir, request, '--assert=plain')
+    runpytest_with_assert_mode(testdir, request, '--assert=rewrite')
+    testdir.runpytest.assert_called_once()
+    testdir.runpytest_subprocess.assert_called_once()
+
+
+def test_runpytest_with_assert_mode_without_assert_mode(request):
+    testdir = Mock()
+    with pytest.raises(ValueError):
+        runpytest_with_assert_mode(testdir, request)

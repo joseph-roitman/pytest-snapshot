@@ -202,7 +202,8 @@ Contributing
 Contributions are very welcome. Before contributing, please discuss the change with me.
 I wish to keep this plugin flexible and not enforce any project layout on the user.
 
-Tests can be run with `tox`_.
+Tests can be run with `tox`_ or ``python -m pytest``.
+Note that the test suite does not pass when run with ``--assert=plain``.
 
 
 License
