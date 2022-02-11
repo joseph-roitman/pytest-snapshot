@@ -2,7 +2,7 @@ import sys
 
 import pytest
 
-from tests.utils import assert_pytest_passes
+from tests.utils import assert_pytest_passes, runpytest_with_assert_mode
 
 
 @pytest.fixture
@@ -29,7 +29,7 @@ def test_assert_match_dir_success(testdir, basic_case_dir):
     assert_pytest_passes(testdir)
 
 
-def test_assert_match_dir_failure(testdir, basic_case_dir):
+def test_assert_match_dir_failure(request, testdir, basic_case_dir):
     testdir.makepyfile("""
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
@@ -40,7 +40,7 @@ def test_assert_match_dir_failure(testdir, basic_case_dir):
                 },
             }, 'dict_snapshot1')
     """)
-    result = testdir.runpytest('-v')
+    result = runpytest_with_assert_mode(testdir, request, '-v', '--assert=rewrite')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
         ">* raise AssertionError(snapshot_diff_msg)",
@@ -280,7 +280,6 @@ def test_assert_match_dir_empty_snapshot(testdir, basic_case_dir):
     When testing a empty dict, if the directory doesn't exist, the correct behaviour is to pass.
     This behaviour is important since git ignores empty directories.
     """
-    basic_case_dir.join('file1').write_text('', 'ascii')
     testdir.makepyfile("""
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'

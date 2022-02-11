@@ -5,7 +5,7 @@ import pytest
 
 from pytest_snapshot._utils import simple_version_parse
 from pytest_snapshot.plugin import _file_encode
-from tests.utils import assert_pytest_passes
+from tests.utils import assert_pytest_passes, runpytest_with_assert_mode
 
 
 @pytest.fixture
@@ -50,13 +50,13 @@ def test_assert_match_success_bytes(testdir, basic_case_dir):
     assert_pytest_passes(testdir)
 
 
-def test_assert_match_failure_string(testdir, basic_case_dir):
+def test_assert_match_failure_string(request, testdir, basic_case_dir):
     testdir.makepyfile(r"""
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
             snapshot.assert_match('the INCORRECT value of snapshot1.txt\n', 'snapshot1.txt')
     """)
-    result = testdir.runpytest('-v')
+    result = runpytest_with_assert_mode(testdir, request, '-v', '--assert=rewrite')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
         ">* raise AssertionError(snapshot_diff_msg)",
@@ -70,14 +70,14 @@ def test_assert_match_failure_string(testdir, basic_case_dir):
     assert result.ret == 1
 
 
-def test_assert_match_failure_bytes(testdir, basic_case_dir):
+def test_assert_match_failure_bytes(request, testdir, basic_case_dir):
     testdir.makepyfile(r"""
         import os
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
             snapshot.assert_match(b'the INCORRECT value of snapshot1.txt' + os.linesep.encode(), 'snapshot1.txt')
     """)
-    result = testdir.runpytest('-v')
+    result = runpytest_with_assert_mode(testdir, request, '-v', '--assert=rewrite')
     result.stdout.fnmatch_lines([
         r'*::test_sth FAILED*',
         r">* raise AssertionError(snapshot_diff_msg)",
@@ -92,27 +92,25 @@ def test_assert_match_failure_bytes(testdir, basic_case_dir):
 
 
 @pytest.mark.skipif(simple_version_parse(pytest.__version__) < (5, 0, 0), reason="consecutive flag not supported.")
-def test_assert_match_failure_assert_plain(testdir, basic_case_dir):
+def test_assert_match_failure_assert_plain(request, testdir, basic_case_dir):
     """
     Testing plugin behavior when users run "pytest --assert=plain" is complicated and fragile since the outer pytest
-    and inner pytest affect one another. To get around this, we mock "--assert=plain" behavior.
+    and inner pytest affect one another. To get around this, we call pytest in a subprocess.
+
+    If you wish to run this test in a debugger, consider replacing `runpytest_subprocess` with `runpytest` and running
+    the test with "--assert=plain".
     """
     testdir.makepyfile(r"""
-        from unittest import mock
-        def _assert_equal_mock(value, snapshot):
-            raise AssertionError()
-
         def test_sth(snapshot):
             snapshot.snapshot_dir = 'case_dir'
-            with mock.patch('pytest_snapshot.plugin._assert_equal', _assert_equal_mock):
-                snapshot.assert_match('the INCORRECT value of snapshot1.txt\n', 'snapshot1.txt')
+            snapshot.assert_match('the INCORRECT value of snapshot1.txt\n', 'snapshot1.txt')
     """)
 
-    result = testdir.runpytest('-v')
+    result = runpytest_with_assert_mode(testdir, request, '-v', '--assert=plain')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
     ])
-    # Use consecutive=True to verify that the mock was not accidentally broken.
+    # Use consecutive=True to verify that --assert=rewrite was not triggered somehow.
     result.stdout.fnmatch_lines([
         ">* raise AssertionError(snapshot_diff_msg)",
         'E* AssertionError: value does not match the expected value in snapshot case_dir?snapshot1.txt',
@@ -336,7 +334,7 @@ def test_assert_match_edge_cases(testdir, basic_case_dir, tested_value):
     assert_pytest_passes(testdir)  # assert that snapshot update worked
 
 
-def test_assert_match_unsupported_value_existing_snapshot(testdir, basic_case_dir):
+def test_assert_match_unsupported_value_existing_snapshot(request, testdir, basic_case_dir):
     """
     Test that when running tests without --snapshot-update, we don't tell the user that the value is unsupported.
     We instead tell the user that the value does not equal the snapshot. This behaviour is more helpful.
@@ -347,7 +345,7 @@ def test_assert_match_unsupported_value_existing_snapshot(testdir, basic_case_di
             snapshot.snapshot_dir = 'case_dir'
             snapshot.assert_match('\r', 'newline.txt')
     """)
-    result = testdir.runpytest('-v')
+    result = runpytest_with_assert_mode(testdir, request, '-v', '--assert=rewrite')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
         'E* AssertionError: value does not match the expected value in snapshot case_dir?newline.txt',
