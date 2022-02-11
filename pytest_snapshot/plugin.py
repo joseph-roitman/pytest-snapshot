@@ -188,7 +188,7 @@ class Snapshot:
                 else:
                     snapshot_diff_msg = None
 
-                if snapshot_diff_msg:
+                if snapshot_diff_msg is not None:
                     snapshot_diff_msg = 'value does not match the expected value in snapshot {}\n{}'.format(
                         shorten_path(snapshot_path), snapshot_diff_msg)
                     raise AssertionError(snapshot_diff_msg)
@@ -255,6 +255,6 @@ def _get_default_snapshot_dir(node: _pytest.python.Function) -> Path:
         parametrize_name = parametrize_match.group(1)
         parametrize_name = get_valid_filename(parametrize_name)
     default_snapshot_dir = test_module_dir.join('snapshots', test_module, test_name)
-    if parametrize_name:
+    if parametrize_name is not None:
         default_snapshot_dir = default_snapshot_dir.join(parametrize_name)
     return Path(str(default_snapshot_dir))
