@@ -17,7 +17,7 @@ def pytest_addoption(parser):
     group.addoption(
         '--snapshot-update',
         action='store_true',
-        help='Update snapshots.',
+        help='Update snapshot files instead of testing against them.',
     )
     group.addoption(
         '--allow-snapshot-deletion',
@@ -88,7 +88,8 @@ class Snapshot:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self._created_snapshots or self._updated_snapshots or self._snapshots_to_delete:
-            message_lines = ['Snapshot directory was modified: {}'.format(shorten_path(self.snapshot_dir))]
+            message_lines = ['Snapshot directory was modified: {}'.format(shorten_path(self.snapshot_dir)),
+                             '  (verify that the changes are expected before committing them to version control)']
             if self._created_snapshots:
                 message_lines.append('  Created snapshots:')
                 message_lines.extend('    ' + str(s.relative_to(self.snapshot_dir)) for s in self._created_snapshots)
@@ -127,6 +128,7 @@ class Snapshot:
         else:
             snapshot_path = self.snapshot_dir.joinpath(snapshot_name)
 
+        # TODO: snapshot_path = snapshot_path.resolve(strict=False). Requires Python >3.6 for strict=False.
         if self.snapshot_dir not in snapshot_path.parents:
             raise ValueError('Snapshot path {} is not in {}'.format(
                 shorten_path(snapshot_path), shorten_path(self.snapshot_dir)))
@@ -191,8 +193,9 @@ class Snapshot:
                     snapshot_diff_msg = None
 
                 if snapshot_diff_msg is not None:
-                    snapshot_diff_msg = 'value does not match the expected value in snapshot {}\n{}'.format(
-                        shorten_path(snapshot_path), snapshot_diff_msg)
+                    snapshot_diff_msg = 'value does not match the expected value in snapshot {}\n' \
+                                        '  (run pytest with --snapshot-update to update snapshots)\n{}'.format(
+                                            shorten_path(snapshot_path), snapshot_diff_msg)
                     raise AssertionError(snapshot_diff_msg)
             else:
                 raise AssertionError(
@@ -227,14 +230,14 @@ class Snapshot:
             self._snapshots_to_delete.extend(snapshot_dir_path.joinpath(name) for name in sorted(removed_names))
         else:
             if added_names or removed_names:
-                message_lines = ['Values do not match snapshots in {}'.format(shorten_path(snapshot_dir_path))]
+                message_lines = ['Values do not match snapshots in {}'.format(shorten_path(snapshot_dir_path)),
+                                 '  (run pytest with --snapshot-update to update the snapshot directory)']
                 if added_names:
                     message_lines.append("  Values without snapshots:")
                     message_lines.extend('    ' + s for s in added_names)
                 if removed_names:
                     message_lines.append("  Snapshots without values:")
                     message_lines.extend('    ' + s for s in removed_names)
-                message_lines.append('  Run pytest with --snapshot-update to update the snapshot directory.')
                 raise AssertionError('\n'.join(message_lines))
 
         # Call assert_match to add, update, or assert equality for all snapshot files in the directory.
