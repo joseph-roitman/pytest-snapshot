@@ -1,3 +1,4 @@
+import operator
 import os
 import re
 from pathlib import Path
@@ -127,7 +128,7 @@ class Snapshot:
             snapshot_path = self.snapshot_dir.joinpath(snapshot_name)
 
         if self.snapshot_dir not in snapshot_path.parents:
-            raise AssertionError('Snapshot path {} is not in {}'.format(
+            raise ValueError('Snapshot path {} is not in {}'.format(
                 shorten_path(snapshot_path), shorten_path(self.snapshot_dir)))
 
         return snapshot_path
@@ -155,6 +156,7 @@ class Snapshot:
         If pytest was run with the --snapshot-update flag, the snapshot will instead be updated to ``value``.
         The test will fail if there were any changes to the snapshot.
         """
+        __tracebackhide__ = operator.methodcaller("errisinstance", AssertionError)
         compare, encode, decode = self._get_compare_encode_decode(value)
         snapshot_path = self._snapshot_path(snapshot_name)
 
@@ -204,6 +206,7 @@ class Snapshot:
         If pytest was run with the --snapshot-update flag, the snapshots will be updated.
         The test will fail if there were any changes to the snapshots.
         """
+        __tracebackhide__ = operator.methodcaller("errisinstance", AssertionError)
         if not isinstance(dir_dict, dict):
             raise TypeError('dir_dict must be a dictionary')
 

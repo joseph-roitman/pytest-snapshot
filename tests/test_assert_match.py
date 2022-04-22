@@ -26,7 +26,7 @@ def test_assert_match_with_external_snapshot_path(testdir, basic_case_dir):
     result = testdir.runpytest('-v')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        "E* AssertionError: Snapshot path not_case_dir?snapshot1.txt is not in case_dir",
+        "E* ValueError: Snapshot path not_case_dir?snapshot1.txt is not in case_dir",
     ])
     assert result.ret == 1
 
@@ -59,7 +59,7 @@ def test_assert_match_failure_string(request, testdir, basic_case_dir):
     result = runpytest_with_assert_mode(testdir, request, '-v', '--assert=rewrite')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        ">* raise AssertionError(snapshot_diff_msg)",
+        r">* snapshot.assert_match('the INCORRECT value of snapshot1.txt\n', 'snapshot1.txt')",
         'E* AssertionError: value does not match the expected value in snapshot case_dir?snapshot1.txt',
         "E* assert * == *",
         "E* - the valuÉ of snapshot1.txt",
@@ -80,7 +80,7 @@ def test_assert_match_failure_bytes(request, testdir, basic_case_dir):
     result = runpytest_with_assert_mode(testdir, request, '-v', '--assert=rewrite')
     result.stdout.fnmatch_lines([
         r'*::test_sth FAILED*',
-        r">* raise AssertionError(snapshot_diff_msg)",
+        r">* snapshot.assert_match(b'the INCORRECT value of snapshot1.txt' + os.linesep.encode(), 'snapshot1.txt')",
         r'E* AssertionError: value does not match the expected value in snapshot case_dir?snapshot1.txt',
         r"E* assert * == *",
         r"E* At index 4 diff: * != *",
@@ -112,10 +112,10 @@ def test_assert_match_failure_assert_plain(request, testdir, basic_case_dir):
     ])
     # Use consecutive=True to verify that --assert=rewrite was not triggered somehow.
     result.stdout.fnmatch_lines([
-        ">* raise AssertionError(snapshot_diff_msg)",
+        r">* snapshot.assert_match('the INCORRECT value of snapshot1.txt\n', 'snapshot1.txt')",
         'E* AssertionError: value does not match the expected value in snapshot case_dir?snapshot1.txt',
         '',
-        '*plugin.py:*: AssertionError',
+        '*test_assert_match_failure_assert_plain.py:*: AssertionError',
     ], consecutive=True)
     assert result.ret == 1
 

@@ -43,7 +43,12 @@ def test_assert_match_dir_failure(request, testdir, basic_case_dir):
     result = runpytest_with_assert_mode(testdir, request, '-v', '--assert=rewrite')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        ">* raise AssertionError(snapshot_diff_msg)",
+        "* snapshot.assert_match_dir({",
+        "*     'obj1.txt': 'the value of obj1.txt',",
+        "*     'subdir1': {",
+        "*         'subobj1.txt': 'the INCORRECT value of subobj1.txt',",
+        "*     },",
+        "* }, 'dict_snapshot1')",
         'E* A*Error: value does not match the expected value in snapshot case_dir?dict_snapshot1?subdir1?subobj1.txt',
         "E* assert * == *",
         "E* - the value of subobj1.txt",
