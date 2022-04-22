@@ -199,9 +199,10 @@ def test_assert_match_update_existing_snapshot(testdir, basic_case_dir, case_dir
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
-        "E* AssertionError: Snapshot directory was modified: case_dir",
-        'E*   Updated snapshots:',
-        'E*     snapshot1.txt',
+        '* ERROR at teardown of test_sth *',
+        "Snapshot directory was modified: case_dir",
+        '  Updated snapshots:',
+        '    snapshot1.txt',
     ])
     assert result.ret == 1
 
@@ -225,9 +226,10 @@ def test_assert_match_update_existing_snapshot_and_exception_in_test(testdir, ba
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
         '*::test_sth ERROR*',
-        "E* AssertionError: Snapshot directory was modified: case_dir",
-        'E*   Updated snapshots:',
-        'E*     snapshot1.txt',
+        '* ERROR at teardown of test_sth *',
+        "Snapshot directory was modified: case_dir",
+        '  Updated snapshots:',
+        '    snapshot1.txt',
         'E* assert False',
     ])
     assert result.ret == 1
@@ -243,9 +245,10 @@ def test_assert_match_create_new_snapshot(testdir, basic_case_dir):
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
-        "E* Snapshot directory was modified: case_dir",
-        'E*   Created snapshots:',
-        'E*     sub_dir?new_snapshot1.txt',
+        '* ERROR at teardown of test_sth *',
+        "Snapshot directory was modified: case_dir",
+        '  Created snapshots:',
+        '    sub_dir?new_snapshot1.txt',
     ])
     assert result.ret == 1
 
@@ -261,9 +264,10 @@ def test_assert_match_create_new_snapshot_in_default_dir(testdir):
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
-        "E* Snapshot directory was modified: snapshots?test_assert_match_create_new_snapshot_in_default_dir?test_sth",
-        'E*   Created snapshots:',
-        'E*     sub_dir?new_snapshot1.txt',
+        '* ERROR at teardown of test_sth *',
+        "Snapshot directory was modified: snapshots?test_assert_match_create_new_snapshot_in_default_dir?test_sth",
+        '  Created snapshots:',
+        '    sub_dir?new_snapshot1.txt',
     ])
     assert result.ret == 1
     assert testdir.tmpdir.join(

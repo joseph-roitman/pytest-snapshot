@@ -107,7 +107,7 @@ class Snapshot:
 
                 message_lines.extend('    ' + str(s.relative_to(self.snapshot_dir)) for s in self._snapshots_to_delete)
 
-            raise AssertionError('\n'.join(message_lines))
+            pytest.fail('\n'.join(message_lines), pytrace=False)
 
     @property
     def snapshot_dir(self):
