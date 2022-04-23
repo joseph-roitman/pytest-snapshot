@@ -61,6 +61,7 @@ def test_assert_match_failure_string(request, testdir, basic_case_dir):
         '*::test_sth FAILED*',
         r">* snapshot.assert_match('the INCORRECT value of snapshot1.txt\n', 'snapshot1.txt')",
         'E* AssertionError: value does not match the expected value in snapshot case_dir?snapshot1.txt',
+        "E*   (run pytest with --snapshot-update to update snapshots)",
         "E* assert * == *",
         "E* - the valuÉ of snapshot1.txt",
         "E* ?         ^",
@@ -82,6 +83,7 @@ def test_assert_match_failure_bytes(request, testdir, basic_case_dir):
         r'*::test_sth FAILED*',
         r">* snapshot.assert_match(b'the INCORRECT value of snapshot1.txt' + os.linesep.encode(), 'snapshot1.txt')",
         r'E* AssertionError: value does not match the expected value in snapshot case_dir?snapshot1.txt',
+        r'E*   (run pytest with --snapshot-update to update snapshots)',
         r"E* assert * == *",
         r"E* At index 4 diff: * != *",
         r"E* Full diff:",
@@ -114,6 +116,7 @@ def test_assert_match_failure_assert_plain(request, testdir, basic_case_dir):
     result.stdout.fnmatch_lines([
         r">* snapshot.assert_match('the INCORRECT value of snapshot1.txt\n', 'snapshot1.txt')",
         'E* AssertionError: value does not match the expected value in snapshot case_dir?snapshot1.txt',
+        'E*   (run pytest with --snapshot-update to update snapshots)',
         '',
         '*test_assert_match_failure_assert_plain.py:*: AssertionError',
     ], consecutive=True)
@@ -200,7 +203,8 @@ def test_assert_match_update_existing_snapshot(testdir, basic_case_dir, case_dir
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
         '* ERROR at teardown of test_sth *',
-        "Snapshot directory was modified: case_dir",
+        'Snapshot directory was modified: case_dir',
+        '  (verify that the changes are expected before committing them to version control)',
         '  Updated snapshots:',
         '    snapshot1.txt',
     ])
@@ -227,7 +231,8 @@ def test_assert_match_update_existing_snapshot_and_exception_in_test(testdir, ba
         '*::test_sth FAILED*',
         '*::test_sth ERROR*',
         '* ERROR at teardown of test_sth *',
-        "Snapshot directory was modified: case_dir",
+        'Snapshot directory was modified: case_dir',
+        '  (verify that the changes are expected before committing them to version control)',
         '  Updated snapshots:',
         '    snapshot1.txt',
         'E* assert False',
@@ -246,7 +251,8 @@ def test_assert_match_create_new_snapshot(testdir, basic_case_dir):
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
         '* ERROR at teardown of test_sth *',
-        "Snapshot directory was modified: case_dir",
+        'Snapshot directory was modified: case_dir',
+        '  (verify that the changes are expected before committing them to version control)',
         '  Created snapshots:',
         '    sub_dir?new_snapshot1.txt',
     ])
@@ -265,7 +271,8 @@ def test_assert_match_create_new_snapshot_in_default_dir(testdir):
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
         '* ERROR at teardown of test_sth *',
-        "Snapshot directory was modified: snapshots?test_assert_match_create_new_snapshot_in_default_dir?test_sth",
+        'Snapshot directory was modified: snapshots?test_assert_match_create_new_snapshot_in_default_dir?test_sth',
+        '  (verify that the changes are expected before committing them to version control)',
         '  Created snapshots:',
         '    sub_dir?new_snapshot1.txt',
     ])
