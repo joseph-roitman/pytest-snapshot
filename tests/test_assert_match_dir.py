@@ -43,7 +43,12 @@ def test_assert_match_dir_failure(request, testdir, basic_case_dir):
     result = runpytest_with_assert_mode(testdir, request, '-v', '--assert=rewrite')
     result.stdout.fnmatch_lines([
         '*::test_sth FAILED*',
-        ">* raise AssertionError(snapshot_diff_msg)",
+        "* snapshot.assert_match_dir({",
+        "*     'obj1.txt': 'the value of obj1.txt',",
+        "*     'subdir1': {",
+        "*         'subobj1.txt': 'the INCORRECT value of subobj1.txt',",
+        "*     },",
+        "* }, 'dict_snapshot1')",
         'E* A*Error: value does not match the expected value in snapshot case_dir?dict_snapshot1?subdir1?subobj1.txt',
         "E* assert * == *",
         "E* - the value of subobj1.txt",
@@ -168,9 +173,10 @@ def test_assert_match_dir_update_existing_snapshot(testdir, basic_case_dir, case
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
-        "E* AssertionError: Snapshot directory was modified: case_dir",
-        'E*   Updated snapshots:',
-        'E*     dict_snapshot1?subdir1?subobj1.txt',
+        '* ERROR at teardown of test_sth *',
+        "Snapshot directory was modified: case_dir",
+        '  Updated snapshots:',
+        '    dict_snapshot1?subdir1?subobj1.txt',
     ])
     assert result.ret == 1
 
@@ -184,7 +190,7 @@ def test_assert_match_dir_create_new_snapshot_file(testdir, basic_case_dir):
             snapshot.assert_match_dir({
                 'obj1.txt': 'the value of obj1.txt',
                 'subdir1': {
-                    'subobj1.txt': 'the INCORRECT value of subobj1.txt',
+                    'subobj1.txt': 'the value of subobj1.txt',
                     'new_obj.txt': 'the value of new_obj.txt',
                 },
             }, 'dict_snapshot1')
@@ -193,9 +199,10 @@ def test_assert_match_dir_create_new_snapshot_file(testdir, basic_case_dir):
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
-        "E* AssertionError: Snapshot directory was modified: case_dir",
-        'E*   Created snapshots:',
-        'E*     dict_snapshot1?subdir1?new_obj.txt',
+        '* ERROR at teardown of test_sth *',
+        "Snapshot directory was modified: case_dir",
+        '  Created snapshots:',
+        '    dict_snapshot1?subdir1?new_obj.txt',
     ])
     assert result.ret == 1
 
@@ -215,9 +222,10 @@ def test_assert_match_dir_delete_snapshot_file(testdir, basic_case_dir):
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
-        "E* AssertionError: Snapshot directory was modified: case_dir",
-        'E*   Snapshots that should be deleted: (run pytest with --allow-snapshot-deletion to delete them)',
-        'E*     dict_snapshot1?subdir1?subobj1.txt',
+        '* ERROR at teardown of test_sth *',
+        "Snapshot directory was modified: case_dir",
+        '  Snapshots that should be deleted: (run pytest with --allow-snapshot-deletion to delete them)',
+        '    dict_snapshot1?subdir1?subobj1.txt',
     ])
     assert result.ret == 1
 
@@ -225,9 +233,10 @@ def test_assert_match_dir_delete_snapshot_file(testdir, basic_case_dir):
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
-        'E* AssertionError: Snapshot directory was modified: case_dir',
-        'E*   Deleted snapshots:',
-        'E*     dict_snapshot1?subdir1?subobj1.txt',
+        '* ERROR at teardown of test_sth *',
+        'Snapshot directory was modified: case_dir',
+        '  Deleted snapshots:',
+        '    dict_snapshot1?subdir1?subobj1.txt',
     ])
     assert result.ret == 1
 
@@ -250,10 +259,11 @@ def test_assert_match_dir_create_new_snapshot_dir(testdir, basic_case_dir):
     result.stdout.fnmatch_lines([
         '*::test_sth PASSED*',
         '*::test_sth ERROR*',
-        'E* AssertionError: Snapshot directory was modified: case_dir',
-        'E*   Created snapshots:',
-        'E*     new_dict_snapshot?obj1.txt',
-        'E*     new_dict_snapshot?subdir1?subobj1.txt',
+        '* ERROR at teardown of test_sth *',
+        'Snapshot directory was modified: case_dir',
+        '  Created snapshots:',
+        '    new_dict_snapshot?obj1.txt',
+        '    new_dict_snapshot?subdir1?subobj1.txt',
     ])
     assert result.ret == 1
 
