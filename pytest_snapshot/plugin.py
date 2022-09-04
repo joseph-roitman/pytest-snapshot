@@ -196,6 +196,7 @@ class Snapshot:
                     snapshot_diff_msg = 'value does not match the expected value in snapshot {}\n' \
                                         '  (run pytest with --snapshot-update to update snapshots)\n{}'.format(
                                             shorten_path(snapshot_path), snapshot_diff_msg)
+                    snapshot_path.with_suffix('.dump' + snapshot_path.suffix).write_bytes(encode(value))
                     raise AssertionError(snapshot_diff_msg)
             else:
                 raise AssertionError(
