@@ -2,7 +2,7 @@ import operator
 import os
 import re
 from pathlib import Path
-from typing import List, Union
+from typing import Any, Callable, List, Tuple, Union
 
 import pytest
 import _pytest.python
@@ -36,7 +36,7 @@ def snapshot(request):
         yield snapshot
 
 
-def _assert_equal(value, snapshot) -> None:
+def _assert_equal(value: Any, snapshot: Any) -> None:
     if _pytest_expected_on_right():
         assert value == snapshot
     else:
@@ -135,7 +135,9 @@ class Snapshot:
 
         return snapshot_path
 
-    def _get_compare_encode_decode(self, value: Union[str, bytes]):
+    def _get_compare_encode_decode(self, value: Union[str, bytes]) -> Tuple[
+        Callable[[Any, Any], None], Callable[..., bytes], Callable[..., str]
+    ]:
         """
         Returns a 3-tuple of a compare function, an encoding function, and a decoding function.
 
@@ -151,7 +153,7 @@ class Snapshot:
         else:
             raise TypeError('value must be str or bytes')
 
-    def assert_match(self, value: Union[str, bytes], snapshot_name: Union[str, Path]):
+    def assert_match(self, value: Union[str, bytes], snapshot_name: Union[str, Path]) -> None:
         """
         Asserts that ``value`` equals the current value of the snapshot with the given ``snapshot_name``.
 
@@ -202,7 +204,7 @@ class Snapshot:
                     "snapshot {} doesn't exist. (run pytest with --snapshot-update to create it)".format(
                         shorten_path(snapshot_path)))
 
-    def assert_match_dir(self, dir_dict: dict, snapshot_dir_name: Union[str, Path]):
+    def assert_match_dir(self, dir_dict: dict, snapshot_dir_name: Union[str, Path]) -> None:
         """
         Asserts that the values in dir_dict equal the current values in the given snapshot directory.
 

@@ -1,6 +1,7 @@
 import os
 import re
 from pathlib import Path
+from typing import List, Tuple
 
 import pytest
 
@@ -44,7 +45,7 @@ def might_be_valid_filename(s: str) -> bool:
     )
 
 
-def simple_version_parse(version: str):
+def simple_version_parse(version: str) -> Tuple[int, int, int]:
     """
     Returns a 3 tuple of the versions major, minor, and patch.
     Raises a value error if the version string is unsupported.
@@ -75,7 +76,7 @@ def _pytest_expected_on_right() -> bool:
         return pytest_version >= (5, 4, 0)
 
 
-def flatten_dict(d: dict):
+def flatten_dict(d: dict) -> List[Tuple[List, ...]]:
     """
     Returns the flattened dict representation of the given dict.
 
@@ -96,7 +97,7 @@ def flatten_dict(d: dict):
     return result
 
 
-def _flatten_dict(obj, result, prefix):
+def _flatten_dict(obj: dict, result: list, prefix: list) -> None:
     if type(obj) is dict:
         for k, v in obj.items():
             prefix.append(k)
@@ -106,7 +107,7 @@ def _flatten_dict(obj, result, prefix):
         result.append((list(prefix), obj))
 
 
-def flatten_filesystem_dict(d):
+def flatten_filesystem_dict(d: dict) -> dict:
     """
     Returns the flattened dict of a nested dictionary structure describing a filesystem.
 
