@@ -68,12 +68,12 @@ def _file_decode(data: bytes) -> str:
 
 
 class Snapshot:
-    _snapshot_update = None  # type: bool
-    _allow_snapshot_deletion = None  # type: bool
-    _created_snapshots = None  # type: List[Path]
-    _updated_snapshots = None  # type: List[Path]
-    _snapshots_to_delete = None  # type: List[Path]
-    _snapshot_dir = None  # type: Path
+    _snapshot_update: bool
+    _allow_snapshot_deletion: bool
+    _created_snapshots: List[Path]
+    _updated_snapshots: List[Path]
+    _snapshots_to_delete: List[Path]
+    _snapshot_dir: Path
 
     def __init__(self, snapshot_update: bool, allow_snapshot_deletion: bool, snapshot_dir: Path):
         self._snapshot_update = snapshot_update
