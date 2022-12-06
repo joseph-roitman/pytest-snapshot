@@ -1,12 +1,16 @@
 import os
 import re
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, List, Tuple, TypeVar, Union, cast
 
 import pytest
 
 SIMPLE_VERSION_REGEX = re.compile(r'([0-9]+)\.([0-9]+)\.([0-9]+)')
 ILLEGAL_FILENAME_CHARS = r'\/:*?"<>|'
+
+_K = TypeVar("_K")
+_V = TypeVar("_V")
+_RecursiveDict = Dict[_K, Union["_RecursiveDict", _V]]
 
 
 def shorten_path(path: Path) -> Path:
@@ -45,7 +49,7 @@ def might_be_valid_filename(s: str) -> bool:
     )
 
 
-def simple_version_parse(version: str) -> Tuple[int, int, int]:
+def simple_version_parse(version: str) -> Tuple[int, ...]:
     """
     Returns a 3 tuple of the versions major, minor, and patch.
     Raises a value error if the version string is unsupported.
@@ -76,7 +80,7 @@ def _pytest_expected_on_right() -> bool:
         return pytest_version >= (5, 4, 0)
 
 
-def flatten_dict(d: dict) -> List[Tuple[List, ...]]:
+def flatten_dict(d: _RecursiveDict[_K, _V]) -> List[Tuple[List[_K], _V]]:
     """
     Returns the flattened dict representation of the given dict.
 
@@ -92,22 +96,24 @@ def flatten_dict(d: dict) -> List[Tuple[List, ...]]:
         [(['a'], 1), (['b', 'c'], 2)]
     """
     assert type(d) is dict
-    result = []
-    _flatten_dict(d, result, [])
+    result: List[Tuple[List[_K], _V]] = []
+    _flatten_dict(d, result, [])  # type: ignore[misc]
     return result
 
 
-def _flatten_dict(obj: dict, result: list, prefix: list) -> None:
-    if type(obj) is dict:
-        for k, v in obj.items():
-            prefix.append(k)
-            _flatten_dict(v, result, prefix)
-            prefix.pop()
-    else:
-        result.append((list(prefix), obj))
+def _flatten_dict(
+    obj: _RecursiveDict[_K, _V], result: List[Tuple[List[_K], _V]], prefix: List[_K]
+) -> None:
+    for k, v in obj.items():
+        prefix.append(k)
+        if type(v) is dict:
+            _flatten_dict(cast(_RecursiveDict[_K, _V], v), result, prefix)
+        else:
+            result.append((list(prefix), cast(_V, v)))
+        prefix.pop()
 
 
-def flatten_filesystem_dict(d: dict) -> dict:
+def flatten_filesystem_dict(d: _RecursiveDict[str, _V]) -> Dict[str, _V]:
     """
     Returns the flattened dict of a nested dictionary structure describing a filesystem.
 
