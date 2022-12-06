@@ -14,7 +14,7 @@ from pytest_snapshot._utils import flatten_filesystem_dict, _RecursiveDict
 PARAMETRIZED_TEST_REGEX = re.compile(r'^.*?\[(.*)]$')
 
 
-def pytest_addoption(parser: _pytest.config.argparsing.Parser):
+def pytest_addoption(parser: _pytest.config.argparsing.Parser) -> None:
     group = parser.getgroup('snapshot')
     group.addoption(
         '--snapshot-update',
@@ -87,10 +87,10 @@ class Snapshot:
         self._updated_snapshots = []
         self._snapshots_to_delete = []
 
-    def __enter__(self):
+    def __enter__(self) -> "Snapshot":
         return self
 
-    def __exit__(self, *_: Any):
+    def __exit__(self, *_: Any) -> None:
         if self._created_snapshots or self._updated_snapshots or self._snapshots_to_delete:
             message_lines = ['Snapshot directory was modified: {}'.format(shorten_path(self.snapshot_dir)),
                              '  (verify that the changes are expected before committing them to version control)']
@@ -116,11 +116,11 @@ class Snapshot:
             pytest.fail('\n'.join(message_lines), pytrace=False)
 
     @property
-    def snapshot_dir(self):
+    def snapshot_dir(self) -> Path:
         return self._snapshot_dir
 
     @snapshot_dir.setter
-    def snapshot_dir(self, value):
+    def snapshot_dir(self, value: Union[str, os.PathLike[str], Path]) -> None:
         self._snapshot_dir = Path(value).absolute()
 
     def _snapshot_path(self, snapshot_name: Union[str, os.PathLike[str]]) -> Path:
