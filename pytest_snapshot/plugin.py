@@ -2,17 +2,18 @@ import operator
 import os
 import re
 from pathlib import Path
-from typing import Any, Callable, List, Tuple, Union
+from typing import Any, Callable, Iterator, List, Optional, Tuple, Union
 
 import pytest
 import _pytest.python
+import _pytest.config.argparsing
 
 from pytest_snapshot._utils import shorten_path, get_valid_filename, _pytest_expected_on_right, flatten_filesystem_dict
 
 PARAMETRIZED_TEST_REGEX = re.compile(r'^.*?\[(.*)]$')
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: _pytest.config.argparsing.Parser):
     group = parser.getgroup('snapshot')
     group.addoption(
         '--snapshot-update',
@@ -27,7 +28,9 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture
-def snapshot(request):
+def snapshot(request: pytest.FixtureRequest) -> Iterator["Snapshot"]:
+    # FIXME Properly handle different node type
+    assert isinstance(request.node, pytest.Function)
     default_snapshot_dir = _get_default_snapshot_dir(request.node)
 
     with Snapshot(request.config.option.snapshot_update,
@@ -86,7 +89,7 @@ class Snapshot:
     def __enter__(self):
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, *_: Any):
         if self._created_snapshots or self._updated_snapshots or self._snapshots_to_delete:
             message_lines = ['Snapshot directory was modified: {}'.format(shorten_path(self.snapshot_dir)),
                              '  (verify that the changes are expected before committing them to version control)']
@@ -119,7 +122,7 @@ class Snapshot:
     def snapshot_dir(self, value):
         self._snapshot_dir = Path(value).absolute()
 
-    def _snapshot_path(self, snapshot_name: Union[str, Path]) -> Path:
+    def _snapshot_path(self, snapshot_name: Union[str, os.PathLike[str]]) -> Path:
         """
         Returns the absolute path to the given snapshot.
         """
@@ -187,6 +190,7 @@ class Snapshot:
         else:
             if encoded_expected_value is not None:
                 expected_value = decode(encoded_expected_value)
+                snapshot_diff_msg: Optional[str]
                 try:
                     compare(value, expected_value)
                 except AssertionError as e:
