@@ -3,12 +3,12 @@ pytest-snapshot
 ===============
 
 .. image:: https://img.shields.io/pypi/v/pytest-snapshot.svg
-    :target: https://pypi.org/project/pytest-snapshot
-    :alt: PyPI version
+   :target: https://pypi.org/project/pytest-snapshot
+   :alt: PyPI version
 
 .. image:: https://img.shields.io/pypi/pyversions/pytest-snapshot.svg
-    :target: https://pypi.org/project/pytest-snapshot
-    :alt: Python versions
+   :target: https://pypi.org/project/pytest-snapshot
+   :alt: Python versions
 
 .. image:: https://github.com/joseph-roitman/pytest-snapshot/workflows/CI/badge.svg?branch=master
    :target: https://github.com/joseph-roitman/pytest-snapshot/actions?workflow=CI
@@ -17,6 +17,13 @@ pytest-snapshot
 .. image:: https://img.shields.io/codecov/c/github/joseph-roitman/pytest-snapshot.svg?style=flat
    :alt: Coverage
    :target: https://codecov.io/gh/joseph-roitman/pytest-snapshot
+
+.. image:: https://img.shields.io/pypi/l/pytest-snapshot
+   :alt: PyPI - License
+   :target: https://github.com/joseph-roitman/pytest-snapshot/blob/master/LICENSE
+
+.. image:: https://img.shields.io/pypi/implementation/pytest-snapshot
+   :alt: PyPI - Implementation
 
 
 A plugin for snapshot testing with pytest.
