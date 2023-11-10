@@ -16,27 +16,35 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: [3.5, 3.6, 3.7, 3.8, 3.9, 3.10 - 4.0.0-alpha, pypy3]
+        python-version: [3.7, 3.8, 3.9, '3.10', 3.11, 3.12, 3.13.0-alpha - 4.0.0-alpha, pypy-3.10]
         experimental: [false]
         include:  # To save resources, we only test the latest version (and 3.9 for pytest <6)
           - python-version: 3.9
             os: windows-latest
             experimental: false
-          - python-version: 3.10 - 4.0.0-alpha
+          - python-version: 3.13.0-alpha - 4.0.0-alpha
             os: windows-latest
             experimental: false
           - python-version: 3.9
             os: macos-latest
             # macos builds sometimes get stuck starting "python -m tox".
             experimental: true
-          - python-version: 3.10 - 4.0.0-alpha
+          - python-version: 3.13.0-alpha - 4.0.0-alpha
             os: macos-latest
             # macos builds sometimes get stuck starting "python -m tox".
             experimental: true
+          - python-version: 3.5
+            # Latest os version that supports Python 3.5
+            os: ubuntu-20.04
+            experimental: false
+          - python-version: 3.6
+            # Latest os version that supports Python 3.6
+            os: ubuntu-20.04
+            experimental: false
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -48,7 +56,7 @@ jobs:
     - name: Run tox targets for ${{ matrix.python-version }}
       run: python -m tox
     - name: Upload coverage report
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3
       with:
         directory: coverage-reports
         name: ${{ matrix.python-version }} on ${{ matrix.os }}
