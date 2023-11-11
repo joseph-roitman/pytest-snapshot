@@ -5,8 +5,16 @@ from pathlib import Path
 from typing import Any, AnyStr, Callable, Iterator, List, Optional, Tuple, Union
 
 import pytest
-import _pytest.python
-import _pytest.config.argparsing
+
+try:
+    from pytest import Parser as _Parser
+except ImportError:
+    from _pytest.config.argparsing import Parser as _Parser
+
+try:
+    from pytest import FixtureRequest as _FixtureRequest
+except ImportError:
+    from _pytest.fixtures import FixtureRequest as _FixtureRequest
 
 from pytest_snapshot._utils import shorten_path, get_valid_filename, _pytest_expected_on_right
 from pytest_snapshot._utils import flatten_filesystem_dict, _RecursiveDict
@@ -14,7 +22,7 @@ from pytest_snapshot._utils import flatten_filesystem_dict, _RecursiveDict
 PARAMETRIZED_TEST_REGEX = re.compile(r'^.*?\[(.*)]$')
 
 
-def pytest_addoption(parser: _pytest.config.argparsing.Parser) -> None:
+def pytest_addoption(parser: _Parser) -> None:
     group = parser.getgroup('snapshot')
     group.addoption(
         '--snapshot-update',
@@ -29,7 +37,7 @@ def pytest_addoption(parser: _pytest.config.argparsing.Parser) -> None:
 
 
 @pytest.fixture
-def snapshot(request: pytest.FixtureRequest) -> Iterator["Snapshot"]:
+def snapshot(request: _FixtureRequest) -> Iterator["Snapshot"]:
     # FIXME Properly handle different node type
     assert isinstance(request.node, pytest.Function)
     default_snapshot_dir = _get_default_snapshot_dir(request.node)
@@ -120,7 +128,7 @@ class Snapshot:
         return self._snapshot_dir
 
     @snapshot_dir.setter
-    def snapshot_dir(self, value: Union[str, os.PathLike[str], Path]) -> None:
+    def snapshot_dir(self, value: Union[str, os.PathLike[str]]) -> None:
         self._snapshot_dir = Path(value).absolute()
 
     def _snapshot_path(self, snapshot_name: Union[str, os.PathLike[str]]) -> Path:
@@ -259,7 +267,7 @@ class Snapshot:
             self.assert_match(value, snapshot_dir_path.joinpath(name))  # pyright: ignore
 
 
-def _get_default_snapshot_dir(node: _pytest.python.Function) -> Path:
+def _get_default_snapshot_dir(node: pytest.Function) -> Path:
     """
     Returns the default snapshot directory for the pytest test.
     """
