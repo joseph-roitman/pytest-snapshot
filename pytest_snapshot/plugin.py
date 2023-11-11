@@ -128,10 +128,10 @@ class Snapshot:
         return self._snapshot_dir
 
     @snapshot_dir.setter
-    def snapshot_dir(self, value: Union[str, os.PathLike[str]]) -> None:
+    def snapshot_dir(self, value: Union[str, 'os.PathLike[str]']) -> None:
         self._snapshot_dir = Path(value).absolute()
 
-    def _snapshot_path(self, snapshot_name: Union[str, os.PathLike[str]]) -> Path:
+    def _snapshot_path(self, snapshot_name: Union[str, 'os.PathLike[str]']) -> Path:
         """
         Returns the absolute path to the given snapshot.
         """
@@ -168,7 +168,7 @@ class Snapshot:
         else:
             raise TypeError('value must be str or bytes')
 
-    def assert_match(self, value: AnyStr, snapshot_name: Union[str, os.PathLike[str]]) -> None:
+    def assert_match(self, value: AnyStr, snapshot_name: Union[str, 'os.PathLike[str]']) -> None:
         """
         Asserts that ``value`` equals the current value of the snapshot with the given ``snapshot_name``.
 
@@ -223,7 +223,7 @@ class Snapshot:
     def assert_match_dir(
         self,
         dir_dict: _RecursiveDict[str, Union[bytes, str]],
-        snapshot_dir_name: Union[str, os.PathLike[str]]
+        snapshot_dir_name: Union[str, 'os.PathLike[str]']
     ) -> None:
         """
         Asserts that the values in dir_dict equal the current values in the given snapshot directory.

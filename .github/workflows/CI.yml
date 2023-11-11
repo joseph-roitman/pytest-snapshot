@@ -35,10 +35,6 @@ jobs:
             os: macos-latest
             # macos builds sometimes get stuck starting "python -m tox".
             experimental: true
-          - python-version: 3.5
-            # Latest os version that supports Python 3.5
-            os: ubuntu-20.04
-            experimental: false
           - python-version: 3.6
             # Latest os version that supports Python 3.6
             os: ubuntu-20.04
