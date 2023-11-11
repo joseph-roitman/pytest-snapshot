@@ -2,17 +2,27 @@ import operator
 import os
 import re
 from pathlib import Path
-from typing import Union
+from typing import Any, AnyStr, Callable, Iterator, List, Optional, Tuple, Union
 
 import pytest
-import _pytest.python
 
-from pytest_snapshot._utils import shorten_path, get_valid_filename, _pytest_expected_on_right, flatten_filesystem_dict
+try:
+    from pytest import Parser as _Parser
+except ImportError:
+    from _pytest.config.argparsing import Parser as _Parser
+
+try:
+    from pytest import FixtureRequest as _FixtureRequest
+except ImportError:
+    from _pytest.fixtures import FixtureRequest as _FixtureRequest
+
+from pytest_snapshot._utils import shorten_path, get_valid_filename, _pytest_expected_on_right
+from pytest_snapshot._utils import flatten_filesystem_dict, _RecursiveDict
 
 PARAMETRIZED_TEST_REGEX = re.compile(r'^.*?\[(.*)]$')
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: _Parser) -> None:
     group = parser.getgroup('snapshot')
     group.addoption(
         '--snapshot-update',
@@ -27,7 +37,9 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture
-def snapshot(request):
+def snapshot(request: _FixtureRequest) -> Iterator["Snapshot"]:
+    # FIXME Properly handle different node type
+    assert isinstance(request.node, pytest.Function)
     default_snapshot_dir = _get_default_snapshot_dir(request.node)
 
     with Snapshot(request.config.option.snapshot_update,
@@ -36,7 +48,7 @@ def snapshot(request):
         yield snapshot
 
 
-def _assert_equal(value, snapshot) -> None:
+def _assert_equal(value: AnyStr, snapshot: AnyStr) -> None:
     if _pytest_expected_on_right():
         assert value == snapshot
     else:
@@ -68,12 +80,12 @@ def _file_decode(data: bytes) -> str:
 
 
 class Snapshot:
-    _snapshot_update = None  # type: bool
-    _allow_snapshot_deletion = None  # type: bool
-    _created_snapshots = None  # type: List[Path]
-    _updated_snapshots = None  # type: List[Path]
-    _snapshots_to_delete = None  # type: List[Path]
-    _snapshot_dir = None  # type: Path
+    _snapshot_update: bool
+    _allow_snapshot_deletion: bool
+    _created_snapshots: List[Path]
+    _updated_snapshots: List[Path]
+    _snapshots_to_delete: List[Path]
+    _snapshot_dir: Path
 
     def __init__(self, snapshot_update: bool, allow_snapshot_deletion: bool, snapshot_dir: Path):
         self._snapshot_update = snapshot_update
@@ -83,10 +95,10 @@ class Snapshot:
         self._updated_snapshots = []
         self._snapshots_to_delete = []
 
-    def __enter__(self):
+    def __enter__(self) -> "Snapshot":
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, *_: Any) -> None:
         if self._created_snapshots or self._updated_snapshots or self._snapshots_to_delete:
             message_lines = ['Snapshot directory was modified: {}'.format(shorten_path(self.snapshot_dir)),
                              '  (verify that the changes are expected before committing them to version control)']
@@ -112,14 +124,14 @@ class Snapshot:
             pytest.fail('\n'.join(message_lines), pytrace=False)
 
     @property
-    def snapshot_dir(self):
+    def snapshot_dir(self) -> Path:
         return self._snapshot_dir
 
     @snapshot_dir.setter
-    def snapshot_dir(self, value):
+    def snapshot_dir(self, value: Union[str, 'os.PathLike[str]']) -> None:
         self._snapshot_dir = Path(value).absolute()
 
-    def _snapshot_path(self, snapshot_name: Union[str, Path]) -> Path:
+    def _snapshot_path(self, snapshot_name: Union[str, 'os.PathLike[str]']) -> Path:
         """
         Returns the absolute path to the given snapshot.
         """
@@ -135,7 +147,11 @@ class Snapshot:
 
         return snapshot_path
 
-    def _get_compare_encode_decode(self, value: Union[str, bytes]):
+    def _get_compare_encode_decode(self, value: AnyStr) -> Tuple[
+        Callable[[AnyStr, AnyStr], None],
+        Callable[[AnyStr], bytes],
+        Callable[[bytes], AnyStr]
+    ]:
         """
         Returns a 3-tuple of a compare function, an encoding function, and a decoding function.
 
@@ -147,11 +163,12 @@ class Snapshot:
         if isinstance(value, str):
             return _assert_equal, _file_encode, _file_decode
         elif isinstance(value, bytes):
-            return _assert_equal, lambda x: x, lambda x: x
+            noop: Callable[[bytes], bytes] = lambda x: x
+            return _assert_equal, noop, noop
         else:
             raise TypeError('value must be str or bytes')
 
-    def assert_match(self, value: Union[str, bytes], snapshot_name: Union[str, Path]):
+    def assert_match(self, value: AnyStr, snapshot_name: Union[str, 'os.PathLike[str]']) -> None:
         """
         Asserts that ``value`` equals the current value of the snapshot with the given ``snapshot_name``.
 
@@ -185,6 +202,7 @@ class Snapshot:
         else:
             if encoded_expected_value is not None:
                 expected_value = decode(encoded_expected_value)
+                snapshot_diff_msg: Optional[str]
                 try:
                     compare(value, expected_value)
                 except AssertionError as e:
@@ -202,7 +220,11 @@ class Snapshot:
                     "snapshot {} doesn't exist. (run pytest with --snapshot-update to create it)".format(
                         shorten_path(snapshot_path)))
 
-    def assert_match_dir(self, dir_dict: dict, snapshot_dir_name: Union[str, Path]):
+    def assert_match_dir(
+        self,
+        dir_dict: _RecursiveDict[str, Union[bytes, str]],
+        snapshot_dir_name: Union[str, 'os.PathLike[str]']
+    ) -> None:
         """
         Asserts that the values in dir_dict equal the current values in the given snapshot directory.
 
@@ -214,7 +236,7 @@ class Snapshot:
             raise TypeError('dir_dict must be a dictionary')
 
         snapshot_dir_path = self._snapshot_path(snapshot_dir_name)
-        values_by_filename = flatten_filesystem_dict(dir_dict)
+        values_by_filename = flatten_filesystem_dict(dir_dict)  # type: ignore[misc]
         if snapshot_dir_path.is_dir():
             existing_names = {p.relative_to(snapshot_dir_path).as_posix()
                               for p in snapshot_dir_path.rglob('*') if p.is_file()}
@@ -242,10 +264,10 @@ class Snapshot:
 
         # Call assert_match to add, update, or assert equality for all snapshot files in the directory.
         for name, value in values_by_filename.items():
-            self.assert_match(value, snapshot_dir_path.joinpath(name))
+            self.assert_match(value, snapshot_dir_path.joinpath(name))  # pyright: ignore
 
 
-def _get_default_snapshot_dir(node: _pytest.python.Function) -> Path:
+def _get_default_snapshot_dir(node: pytest.Function) -> Path:
     """
     Returns the default snapshot directory for the pytest test.
     """
