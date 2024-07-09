@@ -87,8 +87,8 @@ def test_assert_match_failure_bytes(request, testdir, basic_case_dir):
         r"E* assert * == *",
         r"E* At index 4 diff: * != *",
         r"E* Full diff:",
-        r"E* - b'the valu\xc3\x89 of snapshot1.txt{}'".format(repr(os.linesep)[1:-1]),
-        r"E* + b'the INCORRECT value of snapshot1.txt{}'".format(repr(os.linesep)[1:-1]),
+        r"E* - *b'the valu\xc3\x89 of snapshot1.txt{}'*".format(repr(os.linesep)[1:-1]),
+        r"E* + *b'the INCORRECT value of snapshot1.txt{}'*".format(repr(os.linesep)[1:-1]),
     ])
     assert result.ret == 1
 
