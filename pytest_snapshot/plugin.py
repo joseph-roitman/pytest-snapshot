@@ -128,7 +128,8 @@ class Snapshot:
         else:
             snapshot_path = self.snapshot_dir.joinpath(snapshot_name)
 
-        # TODO: snapshot_path = snapshot_path.resolve(strict=False). Requires Python >3.6 for strict=False.
+        # Resolve to normalize the path and prevent path traversal
+        snapshot_path = snapshot_path.resolve(strict=False)
         if self.snapshot_dir not in snapshot_path.parents:
             raise ValueError('Snapshot path {} is not in {}'.format(
                 shorten_path(snapshot_path), shorten_path(self.snapshot_dir)))
